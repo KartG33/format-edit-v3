@@ -1,0 +1,4758 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="description" content="PWA-приложение для быстрой очистки и форматирования текста. Работает офлайн.">
+  <meta name="theme-color" content="#0b0f1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="E-dit">
+  <title>E-dit</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Geologica:wght@400;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --s1: #111827;
+      --s2: #1a2235;
+      --s3: #1e2d47;
+      --b1: #1f3054;
+      --b2: #2a4070;
+      --accent: #3b82f6;
+      --accent-d: #2563eb;
+      --indigo: #6366f1;
+      --text: #c9d8f0;
+      --dim: #6b8aad;
+      --muted: #3d5475;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --sans: 'Geologica', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      touch-action: manipulation;
+    }
+
+    html {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      min-height: 100dvh;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg);
+      color: #fff;
+      font-family: 'Geologica', sans-serif;
+      contain: strict;
+    }
+
+    /* ── HEADER ─────────────────────────── */
+    .hdr {
+      flex-shrink: 0;
+      background: var(--s1);
+      border-bottom: 1px solid var(--b1);
+      padding: 10px 14px;
+      padding-top: calc(10px + var(--safe-t));
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .hdr-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+    }
+
+    .install-btn {
+      margin-left: auto;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 7px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: var(--accent);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .install-btn.visible {
+      display: flex;
+    }
+
+    .install-btn:active {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    .file-hdr-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 7px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      color: var(--dim);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .04em;
+    }
+
+    /* ── PRESETS HEADER BUTTON ── */
+    .presets-hdr-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 8px;
+      color: var(--indigo);
+      font: 500 11px var(--sans);
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .presets-hdr-btn:active {
+      background: rgba(99,102,241,.28);
+    }
+
+    /* ── EDIT TAGS SHEET ── */
+    .etags-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--b1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      max-height: 88vh;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    .etags-sheet.open { transform: translateY(0); }
+    .etags-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .etags-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--b1);
+    }
+    .etags-title {
+      font: 600 14px var(--sans);
+      color: var(--text);
+    }
+    .etags-count {
+      font: 400 12px var(--sans);
+      color: var(--dim);
+    }
+    .etags-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .etags-empty {
+      color: var(--dim);
+      font: 400 13px var(--sans);
+      text-align: center;
+      padding: 32px 0;
+    }
+    .etag-card {
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .etag-card-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .etag-struct-label {
+      font: 700 12px var(--mono);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .etag-repeat-badge {
+      background: rgba(245,158,11,.15);
+      border: 1px solid rgba(245,158,11,.3);
+      border-radius: 5px;
+      color: var(--yellow);
+      font: 600 10px var(--sans);
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+    .etag-del-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 13px;
+      transition: color .15s, background .15s;
+    }
+    .etag-del-btn:hover { color: var(--red); background: rgba(239,68,68,.1); }
+    /* ── ETAG CHIP EDITOR ── */
+    .etag-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 0 2px;
+    }
+    .etag-chips-wrap.deleted {
+      opacity: .35;
+      pointer-events: none;
+    }
+    .etag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--s3);
+      border: 1px solid var(--b2);
+      border-radius: 20px;
+      padding: 4px 6px 4px 10px;
+      font: 400 11px var(--mono);
+      color: var(--text);
+      cursor: default;
+      transition: border-color .15s, background .15s;
+      max-width: 100%;
+    }
+    .etag-chip.editing {
+      border-color: var(--accent);
+      background: var(--b1);
+    }
+    .etag-chip-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      cursor: pointer;
+    }
+    .etag-chip-del {
+      background: none;
+      border: none;
+      padding: 0 2px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: color .12s;
+      flex-shrink: 0;
+    }
+    .etag-chip-del:active { color: var(--red); }
+    /* inline input внутри чипа при редактировании */
+    .etag-chip-input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font: 400 11px var(--mono);
+      width: 120px;
+      min-width: 40px;
+      max-width: 220px;
+      padding: 0;
+    }
+    .etag-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px dashed var(--muted);
+      background: none;
+      color: var(--dim);
+      font: 500 11px var(--sans);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .etag-add-btn:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── TEMPLATES BUTTON ── */
+    .tpl-hdr-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.25);
+      border-radius: 8px;
+      color: var(--green);
+      font: 500 11px var(--sans);
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tpl-hdr-btn:active { background: rgba(34,197,94,.22); }
+
+    /* ── TEMPLATES SHEET ── */
+    .tpl-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--b1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      max-height: 82vh;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    .tpl-sheet.open { transform: translateY(0); }
+    .tpl-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .tpl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+    }
+    .tpl-title {
+      font: 600 14px var(--sans);
+      color: var(--text);
+    }
+    .tpl-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tpl-empty {
+      color: var(--dim);
+      font: 400 13px var(--sans);
+      text-align: center;
+      padding: 28px 0 12px;
+    }
+    .tpl-item {
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tpl-item-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tpl-item-name {
+      flex: 1;
+      font: 600 13px var(--sans);
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tpl-use-btn {
+      background: rgba(34,197,94,.15);
+      border: 1px solid rgba(34,197,94,.3);
+      border-radius: 7px;
+      color: var(--green);
+      font: 600 11px var(--sans);
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .tpl-use-btn:active { background: rgba(34,197,94,.28); }
+    .tpl-icon-btn {
+      background: none;
+      border: none;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 13px;
+      transition: color .15s, background .15s;
+    }
+    .tpl-icon-btn:hover { color: var(--text); background: var(--b1); }
+    .tpl-icon-btn.danger:hover { color: var(--red); background: rgba(239,68,68,.1); }
+    .tpl-preview {
+      font: 400 11px var(--mono);
+      color: var(--dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tpl-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .tpl-ph-chip {
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 5px;
+      color: var(--indigo);
+      font: 500 10px var(--mono);
+      padding: 2px 6px;
+    }
+    .tpl-footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px 4px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--b1);
+    }
+    .tpl-foot-btn {
+      flex: 1;
+      padding: 9px 10px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 9px;
+      color: var(--dim);
+      font: 500 12px var(--sans);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      text-align: center;
+    }
+    .tpl-foot-btn:active { background: var(--s3); color: var(--text); }
+    .tpl-foot-btn.accent {
+      background: rgba(59,130,246,.15);
+      border-color: rgba(59,130,246,.3);
+      color: var(--accent);
+    }
+    .tpl-foot-btn.accent:active { background: rgba(59,130,246,.28); }
+
+    /* ── TEMPLATE EDITOR MODAL ── */
+    .tpl-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 60;
+      display: none;
+    }
+    .tpl-modal-overlay.open { display: block; }
+    .tpl-modal-box {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--b2);
+      z-index: 61;
+      display: flex;
+      flex-direction: column;
+      max-height: 88vh;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    .tpl-modal-box.open { transform: translateY(0); }
+    .tpl-modal-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .tpl-modal-title {
+      font: 700 14px var(--sans);
+      color: var(--text);
+      padding: 12px 16px 8px;
+      flex-shrink: 0;
+    }
+    .tpl-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tpl-field-label {
+      font: 600 11px var(--sans);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--dim);
+      margin-bottom: 4px;
+    }
+    .tpl-field-input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 8px;
+      color: var(--text);
+      font: 400 13px var(--sans);
+      padding: 9px 12px;
+      outline: none;
+    }
+    .tpl-field-input:focus { border-color: var(--accent); }
+    .tpl-field-textarea {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 8px;
+      color: var(--text);
+      font: 400 12px var(--mono);
+      padding: 9px 12px;
+      outline: none;
+      resize: none;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+    .tpl-field-textarea:focus { border-color: var(--accent); }
+    .tpl-ph-hint {
+      font: 400 11px var(--sans);
+      color: var(--dim);
+      line-height: 1.5;
+    }
+    .tpl-ph-hint code {
+      background: var(--s3);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      color: var(--indigo);
+    }
+    .tpl-detected-phs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 22px;
+    }
+    .tpl-modal-footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px 4px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--b1);
+    }
+    .tpl-modal-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 9px;
+      color: var(--dim);
+      font: 500 13px var(--sans);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .tpl-modal-btn:active { background: var(--s3); }
+    .tpl-modal-btn.save {
+      background: rgba(59,130,246,.15);
+      border-color: rgba(59,130,246,.35);
+      color: var(--accent);
+    }
+    .tpl-modal-btn.save:active { background: rgba(59,130,246,.28); }
+
+    /* ── FILL PLACEHOLDERS MODAL ── */
+    .fill-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 70;
+      display: none;
+    }
+    .fill-modal-overlay.open { display: block; }
+    .fill-modal-box {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--b2);
+      z-index: 71;
+      display: flex;
+      flex-direction: column;
+      max-height: 88vh;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    .fill-modal-box.open { transform: translateY(0); }
+    .fill-modal-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .fill-modal-title {
+      font: 700 14px var(--sans);
+      color: var(--text);
+      padding: 12px 16px 4px;
+      flex-shrink: 0;
+    }
+    .fill-modal-sub {
+      font: 400 12px var(--sans);
+      color: var(--dim);
+      padding: 0 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--b1);
+    }
+    .fill-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fill-field-label {
+      font: 600 12px var(--sans);
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .fill-field-input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 8px;
+      color: var(--text);
+      font: 400 13px var(--sans);
+      padding: 9px 12px;
+      outline: none;
+    }
+    .fill-field-input:focus { border-color: var(--accent); }
+    .fill-modal-footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px 4px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--b1);
+    }
+    .fill-modal-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 9px;
+      color: var(--dim);
+      font: 500 13px var(--sans);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .fill-modal-btn:active { background: var(--s3); }
+    .fill-modal-btn.apply {
+      background: rgba(34,197,94,.15);
+      border-color: rgba(34,197,94,.3);
+      color: var(--green);
+    }
+    .fill-modal-btn.apply:active { background: rgba(34,197,94,.28); }
+
+    /* ── PRESETS SHEET ── */
+    .presets-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-top: 1px solid var(--b1);
+      border-radius: 16px 16px 0 0;
+      padding: 0 0 env(safe-area-inset-bottom,0px);
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      transform: translateY(100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+    }
+    .presets-sheet.open { transform: translateY(0); }
+
+    .ps-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .ps-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+    }
+    .ps-title {
+      font: 600 14px var(--sans);
+      color: var(--text);
+    }
+    .ps-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--b1);
+    }
+    .ps-tab {
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--dim);
+      font: 500 12px var(--sans);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .ps-tab.active {
+      background: rgba(99,102,241,.15);
+      border-color: rgba(99,102,241,.35);
+      color: var(--indigo);
+    }
+
+    /* ── PRESETS LIST ── */
+    .ps-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ps-empty {
+      color: var(--dim);
+      font: 400 12px var(--sans);
+      text-align: center;
+      padding: 24px 0;
+    }
+    .ps-card {
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ps-card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .ps-card-name {
+      font: 600 13px var(--sans);
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ps-card-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .ps-run-btn {
+      padding: 4px 12px;
+      background: rgba(99,102,241,.18);
+      border: 1px solid rgba(99,102,241,.35);
+      border-radius: 7px;
+      color: var(--indigo);
+      font: 600 11px var(--sans);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ps-run-btn:active { background: rgba(99,102,241,.35); }
+    .ps-icon-btn {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent;
+      border: 1px solid var(--b2);
+      border-radius: 7px;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 13px;
+      transition: background .15s, color .15s;
+    }
+    .ps-icon-btn:active { background: var(--s3); color: var(--text); }
+    .ps-icon-btn.danger { color: #f87171; border-color: rgba(239,68,68,.2); }
+    .ps-icon-btn.danger:active { background: rgba(239,68,68,.1); }
+    .ps-steps-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .ps-step-chip {
+      font: 400 10px var(--mono);
+      color: var(--dim);
+      background: var(--s3);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .ps-regex-preview {
+      font: 400 10px var(--mono);
+      color: var(--dim);
+      background: var(--s3);
+      border-radius: 4px;
+      padding: 3px 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── PRESETS FOOTER ── */
+    .ps-footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--b1);
+      flex-shrink: 0;
+    }
+    .ps-foot-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 9px;
+      border: 1px solid var(--b2);
+      background: transparent;
+      color: var(--dim);
+      font: 500 11px var(--sans);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .ps-foot-btn:active { background: var(--s3); color: var(--text); }
+    .ps-foot-btn.accent {
+      background: rgba(99,102,241,.15);
+      border-color: rgba(99,102,241,.35);
+      color: var(--indigo);
+    }
+    .ps-foot-btn.accent:active { background: rgba(99,102,241,.3); }
+
+    /* ── MODAL EDITOR ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 300;
+      display: none;
+    }
+    .modal-overlay.open { display: block; }
+    .modal-box {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--s1);
+      border-top: 1px solid var(--b1);
+      border-radius: 16px 16px 0 0;
+      padding: 0 0 env(safe-area-inset-bottom,12px);
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 301;
+      transform: translateY(100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-box.open { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font: 600 14px var(--sans);
+      color: var(--text);
+      padding: 12px 16px 10px;
+      flex-shrink: 0;
+    }
+    .modal-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-label {
+      font: 600 11px var(--sans);
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 4px;
+    }
+    .modal-input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font: 400 13px var(--mono);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .modal-input:focus { border-color: var(--indigo); }
+    .modal-input.small { font-size: 12px; }
+
+    /* Step picker for preset editor */
+    .step-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .step-chip {
+      padding: 5px 11px;
+      border-radius: 7px;
+      border: 1px solid var(--b2);
+      background: var(--s2);
+      color: var(--dim);
+      font: 400 11px var(--sans);
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+    .step-chip.selected {
+      background: rgba(99,102,241,.2);
+      border-color: rgba(99,102,241,.5);
+      color: var(--indigo);
+    }
+    .step-chip:active { opacity: .75; }
+
+    /* Ordered steps list */
+    .steps-order {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 32px;
+    }
+    .sorder-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--s3);
+      border-radius: 7px;
+      padding: 6px 10px;
+    }
+    .sorder-drag { color: var(--muted); font-size: 13px; cursor: grab; }
+    .sorder-label { font: 400 12px var(--sans); color: var(--text); flex: 1; }
+    .sorder-del { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 14px; padding: 0 2px; }
+    .sorder-up, .sorder-dn {
+      background: none; border: none; color: var(--dim);
+      cursor: pointer; font-size: 13px; padding: 0 2px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--b1);
+      flex-shrink: 0;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 9px;
+      border: 1px solid var(--b2);
+      background: transparent;
+      color: var(--dim);
+      font: 600 12px var(--sans);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .modal-btn.accent {
+      background: rgba(99,102,241,.18);
+      border-color: rgba(99,102,241,.4);
+      color: var(--indigo);
+    }
+    .modal-btn.accent:active { background: rgba(99,102,241,.35); }
+    .modal-btn:active { background: var(--s3); color: var(--text); }
+
+    .file-hdr-btn:active {
+      background: var(--s3);
+      color: var(--text);
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .chip {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 5px;
+      padding: 2px 8px;
+    }
+
+    .chip b {
+      color: var(--dim);
+      font-weight: 500;
+    }
+
+    /* FORMAT — категории + кнопки */
+    .fmt-cats {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .fmt-cats::-webkit-scrollbar {
+      display: none;
+    }
+
+    .fmt-cat {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--b1);
+      background: var(--s2);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .fmt-cat.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Разделитель категорий внутри плоской строки */
+    .fmt-cat-sep {
+      width: 1px;
+      height: 18px;
+      background: var(--b2);
+      flex-shrink: 0;
+      align-self: center;
+      margin: 0 2px;
+    }
+    /* Лейбл категории перед группой кнопок */
+    .fmt-cat-label {
+      font: 600 9px var(--sans);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+      align-self: center;
+      padding: 0 2px;
+      white-space: nowrap;
+    }
+
+    /* Кнопка Заменить в sym-head */
+    .sym-replace-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      padding: 3px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--b2);
+      background: transparent;
+      color: var(--dim);
+      font: 500 11px var(--sans);
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .sym-replace-btn:active {
+      background: var(--s3);
+      color: var(--text);
+    }
+
+    .f-btn.preset-pill-btn {
+      border-color: rgba(99,102,241,.35);
+      color: var(--indigo);
+      background: rgba(99,102,241,.08);
+    }
+    .f-btn.preset-pill-btn:active {
+      background: rgba(99,102,241,.25);
+    }
+
+    .fmt-cat.preset-pill {
+      border-color: rgba(99,102,241,.35);
+      color: var(--indigo);
+      background: rgba(99,102,241,.08);
+    }
+    .fmt-cat.preset-pill.active {
+      background: var(--indigo);
+      border-color: var(--indigo);
+      color: #fff;
+    }
+    /* Кнопка запуска пресета в fmt-btns */
+    .f-btn.run-preset-btn {
+      background: rgba(99,102,241,.18);
+      border-color: rgba(99,102,241,.45);
+      color: var(--indigo);
+      font-weight: 700;
+    }
+    .f-btn.run-preset-btn:active {
+      background: rgba(99,102,241,.35);
+    }
+    /* Разделитель между категориями и пресетами */
+    .fmt-cat-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--b2);
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .fmt-cat:active {
+      opacity: .8;
+    }
+
+    .fmt-btns {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1px;
+    }
+
+    .fmt-btns::-webkit-scrollbar {
+      display: none;
+    }
+
+    .f-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 11px;
+      border-radius: 7px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      color: var(--dim);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .12s;
+      min-height: 30px;
+    }
+
+    .f-btn:active {
+      background: var(--s3);
+      border-color: var(--b2);
+      color: var(--text);
+      transform: scale(.97);
+    }
+
+    /* ── SYMBOLS ─────────────────────────── */
+    .sym-bar {
+      flex-shrink: 0;
+      background: var(--s1);
+      border-bottom: 1px solid var(--b1);
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sym-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .sym-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--dim);
+    }
+
+    /* Tab switcher — full width */
+    .sym-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 3px;
+      width: 100%;
+    }
+
+    .sym-tab {
+      flex: 1;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 0;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      letter-spacing: .03em;
+    }
+
+    .sym-tab.active {
+      background: var(--s3);
+      border: 1px solid var(--b2);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+    }
+
+    .sym-tab:active {
+      opacity: .8;
+    }
+
+    .sym-scroll {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      min-height: 34px;
+      align-items: center;
+    }
+
+    .sym-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .s-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      cursor: pointer;
+      min-height: 34px;
+      transition: all .12s;
+    }
+
+    .s-btn:active {
+      transform: scale(.93);
+    }
+
+    .s-btn.gone {
+      text-decoration: line-through;
+      color: var(--muted);
+      border-color: var(--b1);
+      background: var(--s1);
+      opacity: .6;
+    }
+
+    .s-btn.gone:active {
+      border-color: rgba(34, 197, 94, .4);
+      color: var(--green);
+      opacity: 1;
+    }
+
+    .s-btn.emoji-btn {
+      font-size: 16px;
+    }
+
+    .s-n {
+      font-size: 9px;
+      color: var(--muted);
+      background: var(--s3);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-family: var(--mono);
+    }
+
+    .sym-empty {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── REPLACE PANEL ───────────────────── */
+    .replace-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .replace-panel.active {
+      display: flex;
+    }
+
+    .rp-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      width: 100%;
+    }
+
+    .rp-field input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 15px;
+      width: 100%;
+      caret-color: var(--accent);
+    }
+
+    .rp-field input::placeholder {
+      color: var(--muted);
+      font-size: 13px;
+      font-family: var(--sans);
+    }
+
+    .rp-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      white-space: nowrap;
+      width: 28px;
+      flex-shrink: 0;
+    }
+
+    .rp-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .rp-pair-hint {
+      font-size: 11px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity .2s;
+      padding: 0 2px;
+    }
+
+    .rp-pair-hint.visible {
+      opacity: 1;
+    }
+
+    .rp-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 0;
+      border-radius: 10px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+      transition: all .12s;
+    }
+
+    .rp-btn:active {
+      background: var(--accent-d);
+      transform: scale(.98);
+    }
+
+    .rp-btn.clear-btn {
+      background: transparent;
+      border: 1px solid var(--b2);
+      color: var(--dim);
+      flex: 0 0 44px;
+      font-size: 18px;
+      padding: 11px 0;
+    }
+
+    .rp-btn.clear-btn:active {
+      background: var(--s3);
+    }
+
+    /* ── CONTENT ROW ────────────────────── */
+    .content-row {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-col {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Sidebar — скрыт на мобайле */
+    .notes-sidebar {
+      display: none;
+    }
+
+    /* ── EDITOR ─────────────────────────── */
+    .editor-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      height: 0;
+    }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      background: var(--s2);
+      color: var(--text);
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.75;
+      padding: 14px 16px;
+      caret-color: var(--accent);
+      -webkit-appearance: none;
+      user-select: text;
+      -webkit-user-select: text;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      contain: layout style paint;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 13px;
+    }
+
+    /* Diff pill */
+    .diff-pill {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(11, 15, 26, .88);
+      border: 1px solid var(--b2);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      pointer-events: none;
+      display: none;
+      backdrop-filter: blur(6px);
+      z-index: 5;
+    }
+
+    .diff-pill.pos {
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, .3);
+    }
+
+    .diff-pill.neg {
+      color: #f87171;
+      border-color: rgba(248, 113, 113, .3);
+    }
+
+    /* File mode banner */
+    .file-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(59, 130, 246, .1);
+      border-bottom: 1px solid rgba(59, 130, 246, .25);
+      font-size: 11px;
+      color: var(--accent);
+      flex-shrink: 0;
+      contain: content;
+    }
+
+    .file-banner.active {
+      display: flex;
+    }
+
+    .file-name {
+      font-family: var(--mono);
+      font-weight: 600;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-close {
+      cursor: pointer;
+      opacity: .6;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .file-close:hover {
+      opacity: 1;
+    }
+
+    /* ── BOTTOM BAR ─────────────────────── */
+    .btm {
+      flex-shrink: 0;
+      background: var(--s1);
+      border-top: 1px solid var(--b1);
+      padding: 8px 10px;
+      padding-bottom: calc(8px + var(--safe-b));
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.6fr 1.6fr 1fr;
+      gap: 6px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, .35);
+    }
+
+    .b-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border-radius: 11px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      color: var(--dim);
+      font-family: var(--sans);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .12s;
+      min-height: 56px;
+    }
+
+    .b-btn:active {
+      transform: scale(.94);
+    }
+
+    .b-btn.green {
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, .25);
+    }
+
+    .b-btn.green:active {
+      background: rgba(34, 197, 94, .1);
+    }
+
+    .b-btn.blue {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, .35);
+    }
+
+    .b-btn.blue:active {
+      background: var(--accent-d);
+    }
+
+    .b-btn.red {
+      color: #f87171;
+      border-color: rgba(239, 68, 68, .25);
+    }
+
+    .b-btn.red:active {
+      background: rgba(239, 68, 68, .1);
+    }
+
+    /* FILE MENU */
+    .file-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--s1);
+      border-top: 1px solid var(--b2);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 16px;
+      padding-bottom: calc(20px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32, 1.2, .64, 1);
+      z-index: 50;
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, .5);
+    }
+
+    .file-menu.open {
+      transform: translateY(0);
+    }
+
+    .fm-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--b2);
+      border-radius: 2px;
+      margin: 0 auto 10px;
+    }
+
+    .fm-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .sheet-close-btn {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+    .sheet-close-btn:hover { color: var(--text); background: var(--b1); }
+
+    .fm-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .12s;
+      text-align: left;
+    }
+
+    .fm-btn:active {
+      background: var(--s3);
+    }
+
+    .fm-btn .fm-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .fm-btn .fm-sub {
+      font-size: 11px;
+      color: var(--dim);
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .fm-btn.open-f .fm-icon {
+      background: rgba(59, 130, 246, .2);
+      color: var(--accent);
+    }
+
+    .fm-btn.save-f .fm-icon {
+      background: rgba(34, 197, 94, .15);
+      color: var(--green);
+    }
+
+    .fm-btn.paste-f .fm-icon {
+      background: rgba(245, 158, 11, .12);
+      color: var(--yellow);
+    }
+
+    .fm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+    }
+
+    .fm-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--s3);
+      border: 1px solid var(--b2);
+      color: var(--text);
+      padding: 9px 20px;
+      border-radius: 22px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0;
+      transition: all .28s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* OFFLINE INDICATOR - hidden */
+    .offline-dot {
+      display: none;
+    }
+
+    /* ── NOTES SHEET ─────────────────────── */
+    .notes-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--s1);
+      border-top: 1px solid var(--b2);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 16px;
+      padding-bottom: calc(20px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32, 1.2, .64, 1);
+      z-index: 50;
+      box-shadow: 0 -20px 60px rgba(0,0,0,.5);
+      max-height: 82dvh;
+    }
+    .notes-menu.open { transform: translateY(0); }
+
+    .nm-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .nm-tab {
+      flex: 1;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 0;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .nm-tab.active {
+      background: var(--s3);
+      border: 1px solid var(--b2);
+      color: var(--text);
+    }
+
+    .nm-save-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .nm-save-input {
+      flex: 1;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      caret-color: var(--accent);
+    }
+    .nm-save-input::placeholder { color: var(--muted); font-family: var(--sans); }
+    .nm-save-btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nm-save-btn:active { background: var(--accent-d); }
+
+    .nm-list {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .nm-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 24px 0;
+      font-style: italic;
+    }
+    .nm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .12s;
+      flex-shrink: 0;
+    }
+    .nm-item:active { background: var(--s3); }
+    .nm-item-body { flex: 1; min-width: 0; }
+    .nm-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nm-item-meta {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+    .nm-item-preview {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nm-del {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .nm-del:active { color: #f87171; background: rgba(239,68,68,.1); }
+
+    .nm-footer {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .nm-foot-btn {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      background: var(--s2);
+      border: 1px solid var(--b1);
+      color: var(--dim);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .03em;
+    }
+    .nm-foot-btn:active { background: var(--s3); color: var(--text); }
+    .nm-foot-btn.danger { color: #f87171; border-color: rgba(239,68,68,.2); }
+    .nm-foot-btn.danger:active { background: rgba(239,68,68,.1); }
+    /* ══════════════════════════════════════
+       DESKTOP LAYOUT (≥768px)
+       ══════════════════════════════════════ */
+    @media (min-width: 768px) {
+
+      /* content-row делит редактор и sidebar */
+      .content-row {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* Sidebar заметок справа */
+      .notes-sidebar {
+        width: 280px;
+        flex-shrink: 0;
+        background: var(--s1);
+        border-left: 1px solid var(--b1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .notes-sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 14px 0;
+        flex-shrink: 0;
+      }
+
+      .notes-sidebar-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: var(--muted);
+      }
+
+      .notes-sidebar .nm-tabs {
+        margin: 10px 14px 0;
+        flex-shrink: 0;
+      }
+
+      .notes-sidebar .nm-save-row {
+        padding: 10px 14px 0;
+        flex-shrink: 0;
+      }
+
+      .notes-sidebar .nm-list {
+        padding: 8px 14px 0;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .notes-sidebar .nm-footer {
+        padding: 8px 14px 12px;
+        flex-shrink: 0;
+      }
+
+      .notes-sidebar #nm-saved-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .notes-sidebar #nm-saved-panel.nm-hidden,
+      .notes-sidebar #nm-hist-panel.nm-hidden {
+        display: none !important;
+      }
+
+      .notes-sidebar #nm-hist-panel {
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* Кнопка Заметки в bottom bar — скрыть */
+      .btn-notes-mobile { display: none !important; }
+
+      /* Bottom bar — 5 колонок */
+      .btm { grid-template-columns: 1fr 1fr 1.6fr 1.6fr 1fr !important; }
+
+      /* Bottom sheet на десктопе не нужен */
+      .notes-menu, #nm-overlay { display: none !important; }
+
+      /* Sidebar скрыт, вместо него drawer */
+      .notes-sidebar { display: none !important; }
+
+      /* ── SPLIT LAYOUT ── */
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+      }
+
+      .split-pane {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Подсветка активного редактора */
+      .split-pane.active-pane .editor-wrap {
+        box-shadow: inset 0 0 0 1px rgba(59,130,246,.35);
+      }
+
+      .split-label {
+        position: absolute;
+        top: 8px;
+        left: 12px;
+        z-index: 5;
+        pointer-events: none;
+        font: 700 9px var(--mono);
+        color: var(--muted);
+        background: var(--bg);
+        padding: 1px 5px;
+        border-radius: 4px;
+        border: 1px solid var(--b1);
+        letter-spacing: .06em;
+      }
+      .split-pane.active-pane .split-label {
+        color: var(--accent);
+        border-color: rgba(59,130,246,.4);
+        background: rgba(59,130,246,.08);
+      }
+
+      .split-divider {
+        width: 2px;
+        flex-shrink: 0;
+        background: var(--b1);
+        cursor: col-resize;
+      }
+
+      /* ── NOTES DRAWER ── */
+      .notes-drawer {
+        position: fixed;
+        top: 0; right: 0; bottom: 0;
+        width: 300px;
+        z-index: 200;
+        background: var(--s1);
+        border-left: 1px solid var(--b1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: translateX(100%);
+        transition: transform .25s cubic-bezier(.4,0,.2,1);
+      }
+      .notes-drawer.open { transform: translateX(0); }
+
+      .notes-drawer-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 199;
+        background: rgba(0,0,0,.3);
+      }
+      .notes-drawer-overlay.open { display: block; }
+
+      /* Кнопка Заметки в header */
+      .notes-hdr-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        background: rgba(245,158,11,.08);
+        border: 1px solid rgba(245,158,11,.25);
+        border-radius: 7px;
+        color: var(--yellow);
+        font: 600 11px var(--sans);
+        cursor: pointer;
+        transition: background .15s;
+        white-space: nowrap;
+      }
+      .notes-hdr-btn:hover { background: rgba(245,158,11,.16); }
+      .notes-hdr-btn.active {
+        background: rgba(245,158,11,.2);
+        border-color: var(--yellow);
+      }
+
+      /* Перегружаем main-col для десктопа — теперь row */
+      .content-row > .main-col {
+        flex-direction: row !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="stats-row" id="stats-row">
+        <div class="chip"><b id="sc">0</b> сим</div>
+        <div class="chip"><b id="sw">0</b> сл</div>
+        <div class="chip" id="sent-chip" style="display:none"><b id="ss">0</b> пред</div>
+        <div class="chip" id="para-chip" style="display:none"><b id="sp">0</b> абз</div>
+      </div>
+      <button class="install-btn" id="install-btn" aria-label="Установить приложение">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Установить
+      </button>
+      <button class="presets-hdr-btn" onclick="openPresetsSheet()" aria-label="Пресеты и регулярки">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Пресеты
+      </button>
+      <button class="tpl-hdr-btn" onclick="openTplSheet()" aria-label="Шаблоны текста">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h7M7 16h5"/>
+        </svg>
+        Шаблоны
+      </button>
+      <button class="file-hdr-btn" onclick="openFileMenu()" aria-label="Работа с файлами">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        Файл
+      </button>
+      <button class="notes-hdr-btn" id="notes-hdr-btn" onclick="openNotesDrawer()" aria-label="Заметки">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Заметки
+      </button>
+    </div>
+
+    <!-- FORMAT: две вкладки Presets / Commands -->
+    <div class="fmt-cats" id="fmt-cats">
+      <button class="fmt-cat active" id="fcat-suno" onclick="setFmtTab('suno',this)">Suno</button>
+      <button class="fmt-cat" id="fcat-presets" onclick="setFmtTab('presets',this)">Presets</button>
+      <button class="fmt-cat" id="fcat-commands" onclick="setFmtTab('commands',this)">Commands</button>
+    </div>
+    <div class="fmt-btns" id="fmt-btns"></div>
+  </div>
+
+  <!-- SYMBOLS BAR -->
+  <div class="sym-bar">
+    <div class="sym-head">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
+      Символы
+      <span class="sym-badge" id="sym-n">0</span>
+      <button class="sym-replace-btn" onclick="openReplaceSheet()" aria-label="Заменить символ">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        Заменить
+      </button>
+    </div>
+    <div class="sym-scroll" id="sym-scroll">
+      <span class="sym-empty">Не найдено</span>
+    </div>
+  </div>
+
+  <!-- CONTENT ROW: два редактора -->
+  <div class="content-row">
+  <div class="main-col">
+
+  <!-- РЕДАКТОР 1 -->
+  <div class="split-pane" id="pane1">
+    <div class="split-label">1</div>
+    <div class="editor-wrap" role="main">
+      <div class="file-banner" id="file-banner">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        <span class="file-name" id="file-name">—</span>
+        <span class="file-close" onclick="closeFile()" role="button" aria-label="Закрыть файл" tabindex="0">✕</span>
+      </div>
+      <textarea id="ed" aria-label="Редактор 1"
+        placeholder="Редактор 1 — вставьте или введите текст…"
+        spellcheck="false" autocorrect="off" autocapitalize="off">
+      </textarea>
+      <div class="diff-pill" id="diff-pill"></div>
+    </div>
+  </div>
+
+  <!-- РАЗДЕЛИТЕЛЬ -->
+  <div class="split-divider"></div>
+
+  <!-- РЕДАКТОР 2 -->
+  <div class="split-pane" id="pane2">
+    <div class="split-label">2</div>
+    <div class="editor-wrap">
+      <textarea id="ed2" aria-label="Редактор 2"
+        placeholder="Редактор 2 — независимый блок…"
+        spellcheck="false" autocorrect="off" autocapitalize="off">
+      </textarea>
+      <div class="diff-pill" id="diff-pill2"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="btm" style="grid-template-columns: 1fr 1fr 1.6fr 1.6fr 1fr 1fr;">
+    <button class="b-btn" onclick="doUndo()" aria-label="Отменить действие">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 7v6h6" />
+        <path d="M3 13a9 9 0 1 0 2.83-6.36L3 9" />
+      </svg>
+      Назад
+    </button>
+    <button class="b-btn" onclick="doRedo()" aria-label="Повторить действие">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 7v6h-6" />
+        <path d="M21 13a9 9 0 1 1-2.83-6.36L21 9" />
+      </svg>
+      Вперёд
+    </button>
+    <button class="b-btn green" onclick="doPaste()" aria-label="Вставить из буфера обмена">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+      </svg>
+      Вставить
+    </button>
+    <button class="b-btn blue" onclick="doCopy()" aria-label="Копировать текст">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
+      Копировать
+    </button>
+    <button class="b-btn red" onclick="doClear()" aria-label="Очистить текст">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14H6L5 6" />
+        <path d="M10 11v6M14 11v6" />
+      </svg>
+      Стереть
+    </button>
+    <button class="b-btn btn-notes-mobile" onclick="openNotesMenu()" aria-label="Заметки и история" style="color:var(--yellow);border-color:rgba(245,158,11,.25)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      Заметки
+    </button>
+  </div>
+  </div><!-- /main-col -->
+
+  </div><!-- /content-row -->
+
+  <!-- NOTES DRAWER (desktop) -->
+  <div class="notes-drawer-overlay" id="notes-drawer-overlay" onclick="closeNotesDrawer()"></div>
+  <aside class="notes-drawer" id="notes-drawer">
+    <div class="notes-sidebar-header" style="justify-content:space-between;padding:12px 14px 0;">
+      <span class="notes-sidebar-title">Заметки</span>
+      <button class="sheet-close-btn" onclick="closeNotesDrawer()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="nm-tabs" style="margin:10px 14px 0;">
+      <button class="nm-tab active" id="sb-tab-saved" onclick="switchSbTab('saved')">📌 Сохранённые</button>
+      <button class="nm-tab" id="sb-tab-hist" onclick="switchSbTab('hist')">🕓 История</button>
+    </div>
+    <div id="nm-saved-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="nm-save-row" style="padding:10px 14px 0;">
+        <input class="nm-save-input" id="nm-name" type="text" placeholder="Название заметки…" maxlength="60" autocomplete="off" spellcheck="false">
+        <button class="nm-save-btn" onclick="saveNote()">↓</button>
+      </div>
+      <div class="nm-list" id="nm-saved-list" style="padding:8px 14px 0;flex:1;overflow-y:auto;"></div>
+      <div class="nm-footer" style="padding:8px 14px 12px;flex-shrink:0;">
+        <button class="nm-foot-btn" onclick="exportJSON()">⬇ JSON</button>
+        <button class="nm-foot-btn danger" onclick="clearAllNotes()">🗑 Всё</button>
+      </div>
+    </div>
+    <div id="nm-hist-panel" class="nm-hidden" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="nm-list" id="nm-hist-list" style="padding:8px 14px 0;flex:1;overflow-y:auto;"></div>
+      <div class="nm-footer" style="padding:8px 14px 12px;flex-shrink:0;">
+        <button class="nm-foot-btn danger" onclick="clearHistory()">🗑 Очистить историю</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- FILE MENU SHEET -->
+  <div class="fm-overlay" id="fm-overlay" onclick="closeFileMenu()"></div>
+  <div class="file-menu" id="file-menu">
+    <div class="fm-handle"></div>
+    <div class="fm-title">Работа с файлами</div>
+
+    <button class="fm-btn open-f" onclick="openFile()" aria-label="Открыть txt файл с устройства">
+      <div class="fm-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+        </svg>
+      </div>
+      <div>
+        Открыть .txt файл
+        <span class="fm-sub">Загрузить текст из файла на устройстве</span>
+      </div>
+    </button>
+
+    <button class="fm-btn save-f" onclick="saveFile()" aria-label="Сохранить текст как txt файл">
+      <div class="fm-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      </div>
+      <div>
+        Сохранить как .txt
+        <span class="fm-sub">Скачать результат на устройство</span>
+      </div>
+    </button>
+
+    <button class="fm-btn paste-f" onclick="doPaste()" aria-label="Вставить текст из буфера обмена">
+      <div class="fm-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <rect x="8" y="2" width="8" height="4" rx="1" />
+        </svg>
+      </div>
+      <div>
+        Вставить из буфера
+        <span class="fm-sub">Получить текст из clipboard</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="file-input" accept=".txt,text/plain" style="display:none">
+
+  <!-- NOTES SHEET -->
+  <div class="fm-overlay" id="nm-overlay" onclick="closeNotesMenu()"></div>
+  <div class="notes-menu" id="notes-menu">
+    <div class="fm-handle"></div>
+
+    <div class="nm-tabs">
+      <button class="nm-tab active" id="nm-tab-saved" onclick="switchNmTab('saved')">📌 Заметки</button>
+      <button class="nm-tab" id="nm-tab-hist" onclick="switchNmTab('hist')">🕓 История</button>
+    </div>
+
+    <!-- Saved tab -->
+    <div id="nm-sheet-saved-panel">
+      <div class="nm-save-row">
+        <input class="nm-save-input" id="nm-sheet-name" type="text" placeholder="Название заметки…" maxlength="60" autocomplete="off" spellcheck="false">
+        <button class="nm-save-btn" onclick="saveNote()">Сохранить</button>
+      </div>
+      <div class="nm-list" id="nm-sheet-saved-list"></div>
+      <div class="nm-footer">
+        <button class="nm-foot-btn" onclick="exportJSON()">⬇ Экспорт JSON</button>
+        <button class="nm-foot-btn danger" onclick="clearAllNotes()">🗑 Очистить всё</button>
+      </div>
+    </div>
+
+    <!-- History tab -->
+    <div id="nm-sheet-hist-panel" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;">
+      <div class="nm-list" id="nm-sheet-hist-list"></div>
+      <div class="nm-footer">
+        <button class="nm-foot-btn danger" onclick="clearHistory()">🗑 Очистить историю</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPLACE SHEET -->
+  <div class="fm-overlay" id="rp-overlay" onclick="closeReplaceSheet()"></div>
+  <div class="file-menu" id="rp-sheet" style="padding-bottom:env(safe-area-inset-bottom,12px);">
+    <div class="fm-handle"></div>
+    <div class="fm-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Заменить символ</span>
+      <button class="sheet-close-btn" onclick="closeReplaceSheet()" aria-label="Закрыть">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:0 18px 16px;">
+      <div class="rp-field">
+        <span class="rp-label">что</span>
+        <input id="rp-from" type="text" placeholder="символ для замены" maxlength="50" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="rp-field">
+        <span class="rp-label">на</span>
+        <input id="rp-to" type="text" placeholder="чем заменить (пусто = удалить)" maxlength="50" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="rp-pair-hint" id="rp-pair-hint"></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="rp-btn" style="flex:1;" onclick="doReplace();closeReplaceSheet();" aria-label="Выполнить замену">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+          Заменить
+        </button>
+        <button class="rp-btn clear-btn" onclick="clearReplace()" title="Очистить поля">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT TAGS SHEET -->
+  <div class="fm-overlay" id="etags-overlay" onclick="closeEtagsSheet()"></div>
+  <div class="etags-sheet" id="etags-sheet">
+    <div class="etags-handle"></div>
+    <div class="etags-header">
+      <span class="etags-title">🏷 Style Tags</span>
+      <span class="etags-count" id="etags-count"></span>
+      <button class="sheet-close-btn" onclick="closeEtagsSheet()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="etags-body" id="etags-body"></div>
+  </div>
+
+  <!-- TEMPLATES SHEET -->
+  <div class="fm-overlay" id="tpl-overlay" onclick="closeTplSheet()"></div>
+  <div class="tpl-sheet" id="tpl-sheet">
+    <div class="tpl-handle"></div>
+    <div class="tpl-header">
+      <span class="tpl-title">📄 Шаблоны</span>
+      <button class="sheet-close-btn" onclick="closeTplSheet()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="tpl-body" id="tpl-body"></div>
+    <div class="tpl-footer">
+      <button class="tpl-foot-btn" onclick="exportTplJSON()">⬇ Экспорт</button>
+      <label class="tpl-foot-btn" style="text-align:center;cursor:pointer;">
+        ⬆ Импорт
+        <input type="file" accept=".json" id="tpl-import-input" style="display:none" onchange="importTplJSON(this)">
+      </label>
+      <button class="tpl-foot-btn accent" onclick="openTplModal(null)">+ Добавить</button>
+    </div>
+  </div>
+
+  <!-- TEMPLATE EDITOR MODAL -->
+  <div class="tpl-modal-overlay" id="tpl-modal-overlay" onclick="closeTplModal()"></div>
+  <div class="tpl-modal-box" id="tpl-modal-box">
+    <div class="tpl-modal-handle"></div>
+    <div class="tpl-modal-title" id="tpl-modal-title">Новый шаблон</div>
+    <div class="tpl-modal-body">
+      <div>
+        <div class="tpl-field-label">Название</div>
+        <input class="tpl-field-input" id="tpl-name-input" type="text" placeholder="Например: Трек для Suno" maxlength="60" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <div class="tpl-field-label">Текст шаблона</div>
+        <textarea class="tpl-field-textarea" id="tpl-text-input" placeholder="Напишите текст. Плейсхолдеры: {{название}}, {{артист}}, {{жанр}}&#10;&#10;Пример:&#10;Трек: {{название}}&#10;Артист: {{артист}}&#10;Жанр: {{жанр}}" rows="7" spellcheck="false"></textarea>
+      </div>
+      <div>
+        <div class="tpl-field-label">Плейсхолдеры в тексте</div>
+        <p class="tpl-ph-hint">Используй <code>{{имя}}</code> — при вставке шаблона появится форма для заполнения.</p>
+        <div class="tpl-detected-phs" id="tpl-detected-phs" style="margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="tpl-modal-footer">
+      <button class="tpl-modal-btn" onclick="closeTplModal()">Отмена</button>
+      <button class="tpl-modal-btn save" onclick="saveTplFromModal()">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- FILL PLACEHOLDERS MODAL -->
+  <div class="fill-modal-overlay" id="fill-modal-overlay" onclick="closeFillModal()"></div>
+  <div class="fill-modal-box" id="fill-modal-box">
+    <div class="fill-modal-handle"></div>
+    <div class="fill-modal-title" id="fill-modal-title">Заполнить шаблон</div>
+    <div class="fill-modal-sub" id="fill-modal-sub"></div>
+    <div class="fill-modal-body" id="fill-modal-body"></div>
+    <div class="fill-modal-footer">
+      <button class="fill-modal-btn" onclick="closeFillModal()">Отмена</button>
+      <button class="fill-modal-btn apply" onclick="applyFillModal()">Вставить в редактор</button>
+    </div>
+  </div>
+
+  <!-- PRESETS SHEET OVERLAY -->
+  <div class="fm-overlay" id="ps-overlay" onclick="closePresetsSheet()"></div>
+
+  <!-- PRESETS SHEET -->
+  <div class="presets-sheet" id="presets-sheet">
+    <div class="ps-handle"></div>
+    <div class="ps-header">
+      <span class="ps-title">Пресеты и регулярки</span>
+      <button class="sheet-close-btn" onclick="closePresetsSheet()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="ps-tabs">
+      <button class="ps-tab active" id="ps-tab-presets" onclick="switchPsTab('presets')">⚡ Пресеты</button>
+      <button class="ps-tab" id="ps-tab-regex" onclick="switchPsTab('regex')">/ Регулярки</button>
+    </div>
+
+    <!-- PRESETS TAB -->
+    <div class="ps-body" id="ps-body-presets"></div>
+
+    <!-- REGEX TAB -->
+    <div class="ps-body" id="ps-body-regex" style="display:none"></div>
+
+    <div class="ps-footer">
+      <button class="ps-foot-btn" id="ps-export-btn" onclick="exportPresetsJSON()">⬇ Экспорт</button>
+      <label class="ps-foot-btn" style="text-align:center;cursor:pointer;">
+        ⬆ Импорт
+        <input type="file" accept=".json" id="ps-import-input" style="display:none" onchange="importPresetsJSON(this)">
+      </label>
+      <button class="ps-foot-btn accent" id="ps-add-btn" onclick="openPresetModal(null)">+ Добавить</button>
+    </div>
+  </div>
+
+  <!-- PRESET EDITOR MODAL -->
+  <div class="modal-overlay" id="preset-modal-overlay" onclick="closePresetModal()"></div>
+  <div class="modal-box" id="preset-modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="preset-modal-title">Новый пресет</div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-label">Название</div>
+        <input class="modal-input" id="pm-name" type="text" placeholder="Например: Очистить Suno текст" maxlength="60" autocomplete="off" spellcheck="false">
+      </div>
+      <div id="pm-steps-section">
+        <div class="modal-label">Шаги (выбери нужные)</div>
+        <div class="step-picker" id="pm-step-picker"></div>
+        <div class="modal-label" style="margin-top:10px;">Порядок выполнения</div>
+        <div class="steps-order" id="pm-steps-order">
+          <span style="color:var(--dim);font:400 11px var(--sans);padding:4px 0;">Выбери шаги выше</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closePresetModal()">Отмена</button>
+      <button class="modal-btn accent" onclick="savePresetFromModal()">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- REGEX EDITOR MODAL -->
+  <div class="modal-overlay" id="regex-modal-overlay" onclick="closeRegexModal()"></div>
+  <div class="modal-box" id="regex-modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="regex-modal-title">Новая регулярка</div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-label">Название кнопки</div>
+        <input class="modal-input" id="rm-name" type="text" placeholder="Например: Убрать ремарки" maxlength="60" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <div class="modal-label">Паттерн (RegExp)</div>
+        <input class="modal-input small" id="rm-pattern" type="text" placeholder="\([^)]+\)" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off">
+      </div>
+      <div>
+        <div class="modal-label">Флаги</div>
+        <input class="modal-input small" id="rm-flags" type="text" placeholder="gm" maxlength="10" autocomplete="off" spellcheck="false" autocapitalize="off" value="g">
+      </div>
+      <div>
+        <div class="modal-label">Заменить на (пусто = удалить)</div>
+        <input class="modal-input small" id="rm-replace" type="text" placeholder="" autocomplete="off" spellcheck="false" autocorrect="off">
+      </div>
+      <div id="rm-test-result" style="font:400 11px var(--mono);color:var(--dim);min-height:18px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeRegexModal()">Отмена</button>
+      <button class="modal-btn" onclick="testRegex()" style="flex:.7;color:var(--yellow);border-color:rgba(245,158,11,.25)">Тест</button>
+      <button class="modal-btn accent" onclick="saveRegexFromModal()">Сохранить</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════════════
+    // SERVICE WORKER
+    // ══════════════════════════════════════
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => { });
+    }
+
+    // ══════════════════════════════════════
+    // STATE
+    // ══════════════════════════════════════
+
+    // Словарь паттернов — порядок важен: составные до одиночных
+    const DICT = [
+      // Заголовки
+      '######', '#####', '####', '###', '##', '#',
+      // Жирный / курсив / горизонтальная линия
+      '***', '**', '*', '___', '__', '_', '---',
+      // Списки и цитаты
+      '~~', '+', '1.', '>', '-',
+      // Код
+      '```', '`',
+      // Ссылки и медиа
+      '[', ']', '(', ')', '!',
+      // Таблицы и прочее
+      '|', ':', '\\'
+    ];
+
+    // Парные скобки для автозамены
+    const PAIRS = {
+      '(': ')', ')': '(',
+      '[': ']', ']': '[',
+      '{': '}', '}': '{',
+      '<': '>', '>': '<',
+      '«': '»', '»': '«',
+      '"': '"', '"': '"',
+      '\u2018': '\u2019', '\u2019': '\u2018',
+    };
+    const PAIR_LABELS = {
+      '(': '( … )', '[': '[ … ]', '{': '{ … }', '<': '< … >',
+      '«': '« … »', '"': '" … "',
+    };
+
+    // Детектор эмодзи
+    const EMOJI_RE = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+
+    const ed  = document.getElementById('ed');
+    const ed2 = document.getElementById('ed2');
+
+    // ── АКТИВНЫЙ РЕДАКТОР ────────────────────────────────────────────────
+    // activeEd — всегда указывает на textarea с фокусом (или ed по умолчанию)
+    let activeEd = ed;
+
+    function setActivePane(textarea) {
+      if (activeEd === textarea) return;
+      activeEd = textarea;
+      // Переключаем состояние на выбранный редактор
+      hist        = activeEd === ed ? hist1 : hist2;
+      hIdx        = activeEd === ed ? hIdx1 : hIdx2;
+      removedSet  = new Set();
+      originalText = activeEd.value;
+      removeEmoji  = false;
+      render();
+      // Подсветка активной панели
+      document.getElementById('pane1').classList.toggle('active-pane', activeEd === ed);
+      document.getElementById('pane2').classList.toggle('active-pane', activeEd === ed2);
+    }
+
+    ed.addEventListener('focus',  () => setActivePane(ed));
+    ed2.addEventListener('focus', () => setActivePane(ed2));
+    // Клик по телу панели тоже переключает фокус
+    document.getElementById('pane1').addEventListener('mousedown', () => { activeEd = ed; });
+    document.getElementById('pane2').addEventListener('mousedown', () => { activeEd = ed2; });
+
+    // ── STATE ─────────────────────────────────────────────────────────────
+    // Раздельные hist/hIdx для каждого редактора
+    let hist1 = [''], hIdx1 = 0;
+    let hist2 = [''], hIdx2 = 0;
+    // Активные указатели (сначала = редактор 1)
+    let hist = hist1, hIdx = hIdx1;
+
+    let removedSet = new Set();
+    let removeEmoji = false;
+    let originalText = '';
+    let currentFileName = null;
+    let fileHandle = null;
+    let currentTab = 'detect';
+
+    // Синхронизируем hist/hIdx обратно в индивидуальные переменные
+    function syncHistBack() {
+      if (activeEd === ed) { hist1 = hist; hIdx1 = hIdx; }
+      else                  { hist2 = hist; hIdx2 = hIdx; }
+    }
+
+    // ══════════════════════════════════════
+    // RENDER
+    // ══════════════════════════════════════
+    function render() {
+      originalText = activeEd.value;
+      removedSet.clear();
+      removeEmoji = false;
+      updateStats();
+      if (currentTab === 'detect') renderSymbols();
+    }
+
+    function updateStats() {
+      const t = activeEd.value;
+      const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+      document.getElementById('sc').textContent = t.length;
+      document.getElementById('sw').textContent = words;
+
+      // Предложения и абзацы — показываем при достаточном объёме текста
+      const sentChip = document.getElementById('sent-chip');
+      const paraChip = document.getElementById('para-chip');
+      if (t.trim().length > 20) {
+        const sentMatches = t.match(/[.!?…]+[\s\n]/g) || [];
+        const sentences = sentMatches.length + 1;
+        const paragraphs = t.split(/\n\s*\n/).filter(p => p.trim().length > 0).length || 1;
+        document.getElementById('ss').textContent = sentences;
+        document.getElementById('sp').textContent = paragraphs;
+        sentChip.style.display = '';
+        paraChip.style.display = paragraphs > 1 ? '' : 'none';
+      } else {
+        sentChip.style.display = 'none';
+        paraChip.style.display = 'none';
+      }
+
+      // diff pill — показываем разницу с originalText
+      const diff = originalText.length - t.length;
+      const pillId = activeEd === ed ? 'diff-pill' : 'diff-pill2';
+      const pill = document.getElementById(pillId);
+      if (pill) {
+        if (diff !== 0) {
+          pill.style.display = 'block';
+          pill.textContent = diff > 0 ? `−${diff} симв.` : `+${Math.abs(diff)} симв.`;
+          pill.className = 'diff-pill ' + (diff > 0 ? 'pos' : 'neg');
+        } else {
+          pill.style.display = 'none';
+        }
+      }
+    }
+
+    // Применяет удаления с приоритетом длины (длинные → короткие)
+    // Каждый паттерн удаляется ТОЛЬКО как самостоятельное вхождение,
+    // не трогая более длинные паттерны из того же символа.
+    function applyRemovals(text) {
+      const sorted = [...removedSet].sort((a, b) => b.length - a.length);
+      sorted.forEach(pat => {
+        text = removeExact(text, pat);
+      });
+      if (removeEmoji) {
+        text = text.replace(EMOJI_RE, '');
+      }
+      return text;
+    }
+
+    // Удаляет только «точные» вхождения паттерна:
+    // вхождение считается точным, если символ паттерна не продолжается
+    // ни слева, ни справа (нет того же символа рядом).
+    function removeExact(text, pat) {
+      const ch = pat[0]; // опорный символ (все символы паттерна одинаковы для #,*,_,-)
+      const allSame = pat.split('').every(c => c === ch);
+
+      if (!allSame) {
+        // Для разнородных паттернов (~~, ```, 1., >, +, \, |, :) —
+        // удаляем только если слева и справа нет того же ch
+        // Используем простой split, они не могут быть «частью более длинного»
+        return text.split(pat).join('');
+      }
+
+      // Для однородных паттернов (#, ##, ###, *, **, ***, _, __, ___, ---)
+      // удаляем вхождение только если:
+      //   - слева нет ch (или начало строки)
+      //   - справа нет ch (или конец строки)
+      const len = pat.length;
+      let result = '';
+      let i = 0;
+      while (i < text.length) {
+        // Проверяем совпадение с паттерном начиная с позиции i
+        if (text.startsWith(pat, i)) {
+          const before = i > 0 ? text[i - 1] : null;
+          const after = i + len < text.length ? text[i + len] : null;
+          const leftOk = before !== ch;
+          const rightOk = after !== ch;
+          if (leftOk && rightOk) {
+            // Точное совпадение — удаляем (не добавляем в result)
+            i += len;
+            continue;
+          }
+        }
+        result += text[i];
+        i++;
+      }
+      return result;
+    }
+
+    // ══════════════════════════════════════
+    // SYMBOL DETECTION
+    // ══════════════════════════════════════
+
+    // Считает только «точные» вхождения паттерна (аналогично removeExact)
+    function countPattern(text, pat) {
+      const ch = pat[0];
+      const allSame = pat.split('').every(c => c === ch);
+
+      if (!allSame) {
+        // Разнородный паттерн — считаем все вхождения
+        let n = 0, idx = 0;
+        while ((idx = text.indexOf(pat, idx)) !== -1) { n++; idx += pat.length; }
+        return n;
+      }
+
+      // Однородный — считаем только точные (не часть более длинного)
+      const len = pat.length;
+      let n = 0, i = 0;
+      while (i < text.length) {
+        if (text.startsWith(pat, i)) {
+          const before = i > 0 ? text[i - 1] : null;
+          const after = i + len < text.length ? text[i + len] : null;
+          if (before !== ch && after !== ch) n++;
+          i += len; // в любом случае прыгаем вперёд
+        } else {
+          i++;
+        }
+      }
+      return n;
+    }
+
+
+    function toggleSym(pat) {
+      if (removedSet.has(pat)) {
+        removedSet.delete(pat);
+      } else {
+        removedSet.add(pat);
+      }
+      applyAndShow();
+    }
+
+    function toggleEmoji() {
+      removeEmoji = !removeEmoji;
+      applyAndShow();
+    }
+
+    // Применяет текущий removedSet к оригиналу и показывает результат
+    function applyAndShow() {
+      // Оригинал — всегда первая запись текущей «сессии» удалений
+      activeEd.value = applyRemovals(originalText);
+      renderSymbols();
+      updateStats();
+    }
+
+    // Перерисовывает панель символов по оригинальному тексту
+    function renderSymbols() {
+      const found = [];
+      for (const pat of DICT) {
+        const cnt = countPattern(originalText, pat);
+        if (cnt > 0) found.push({ pat, cnt });
+      }
+      const emojiMatches = originalText.match(EMOJI_RE) || [];
+      const emojiCount = emojiMatches.length;
+
+      document.getElementById('sym-n').textContent = found.length + (emojiCount > 0 ? 1 : 0);
+
+      const scroll = document.getElementById('sym-scroll');
+      scroll.innerHTML = '';
+
+      if (!found.length && !emojiCount) {
+        scroll.innerHTML = '<span class="sym-empty">Не найдено</span>';
+        return;
+      }
+
+      found.forEach(({ pat, cnt }) => {
+        const btn = document.createElement('button');
+        btn.className = 's-btn' + (removedSet.has(pat) ? ' gone' : '');
+        btn.innerHTML = `<span>${pat}</span><span class="s-n">${cnt}</span>`;
+        btn.addEventListener('click', () => toggleSym(pat));
+        scroll.appendChild(btn);
+      });
+
+      if (emojiCount > 0) {
+        const btn = document.createElement('button');
+        btn.className = 's-btn emoji-btn' + (removeEmoji ? ' gone' : '');
+        btn.innerHTML = `😊<span class="s-n">${emojiCount}</span>`;
+        btn.addEventListener('click', toggleEmoji);
+        scroll.appendChild(btn);
+      }
+    }
+
+    // Возвращает текст «до удалений» — исходный текст текущей сессии
+    function getRawText() {
+      return originalText;
+    }
+
+    // ══════════════════════════════════════
+    // TAB SWITCH
+    // ══════════════════════════════════════
+    function openReplaceSheet() {
+      document.getElementById('rp-overlay').classList.add('active');
+      document.getElementById('rp-sheet').classList.add('open');
+    }
+    function closeReplaceSheet() {
+      document.getElementById('rp-overlay').classList.remove('active');
+      document.getElementById('rp-sheet').classList.remove('open');
+    }
+
+    // ══════════════════════════════════════
+    // REPLACE LOGIC
+    // ══════════════════════════════════════
+    document.getElementById('rp-from').addEventListener('input', updatePairHint);
+
+    function updatePairHint() {
+      const from = document.getElementById('rp-from').value;
+      const hint = document.getElementById('rp-pair-hint');
+      const toField = document.getElementById('rp-to');
+
+      if (PAIRS[from]) {
+        const label = PAIR_LABELS[from] || `${from} … ${PAIRS[from]}`;
+        hint.textContent = `Пара: ${label} — закрывающий символ подставится автоматически`;
+        hint.classList.add('visible');
+        // Автоподставляем пару в поле «на», если оно пустое или тоже парное
+        if (!toField.value || PAIRS[toField.value]) {
+          // не трогаем — пользователь сам выберет что заменить на
+        }
+      } else {
+        hint.classList.remove('visible');
+      }
+    }
+
+    function doReplace() {
+      const from = document.getElementById('rp-from').value;
+      const to = document.getElementById('rp-to').value;
+      if (!from) { toast('Введите символ для замены'); return; }
+
+      const before = activeEd.value;
+      let after = before;
+
+      // Основная замена
+      after = after.split(from).join(to);
+
+      // Парная замена: если from имеет пару — заменяем и её
+      if (PAIRS[from]) {
+        const fromClose = PAIRS[from];
+        // Пара для «на»: если to тоже открывающий — берём его закрывающий, иначе используем PAIRS[from] → PAIRS[to] или пустую строку
+        const toClose = PAIRS[to] || '';
+        after = after.split(fromClose).join(toClose);
+      }
+
+      if (after === before) { toast('Символ не найден в тексте'); return; }
+
+      saveHist(before);
+      activeEd.value = after;
+      saveHist(after);
+      removedSet.clear();
+      render();
+
+      const cnt = (before.split(from).length - 1);
+      const pairMsg = PAIRS[from] ? ' + парный символ' : '';
+      toast(`✓ Заменено ${cnt} вхожд.${pairMsg}`);
+    }
+
+    function clearReplace() {
+      document.getElementById('rp-from').value = '';
+      document.getElementById('rp-to').value = '';
+      document.getElementById('rp-pair-hint').classList.remove('visible');
+    }
+
+    // ══════════════════════════════════════
+    // HISTORY
+    // ══════════════════════════════════════
+    function saveHist(val) {
+      if (hist[hIdx] === val) return;
+      hist = hist.slice(0, hIdx + 1);
+      hist.push(val);
+      hIdx = hist.length - 1;
+      if (hist.length > 150) { hist.shift(); hIdx--; }
+      syncHistBack();
+    }
+
+    function setValue(val, addHist = true) {
+      if (addHist) saveHist(activeEd.value);
+      activeEd.value = val;
+      if (addHist) saveHist(val);
+      activeEd.scrollTop = 0;
+      removedSet.clear();
+      render();
+    }
+
+    function doUndo() {
+      if (hIdx > 0) { hIdx--; activeEd.value = hist[hIdx]; syncHistBack(); removedSet.clear(); render(); }
+    }
+    function doRedo() {
+      if (hIdx < hist.length - 1) { hIdx++; activeEd.value = hist[hIdx]; syncHistBack(); removedSet.clear(); render(); }
+    }
+
+    // ══════════════════════════════════════
+    // FORMAT CATEGORIES
+    // ══════════════════════════════════════
+    const FMT_CATS = {
+      spaces: [
+        { label: '×2 пробелы', fn: 'fmt_spaces' },
+        { label: 'Неразрывные', fn: 'fmt_nbsp' },
+        { label: 'Обрезать края', fn: 'fmt_trim' },
+      ],
+      register: [
+        { label: 'АА ВЕРХНИЙ', fn: 'fmt_upper' },
+        { label: 'аа нижний', fn: 'fmt_lower' },
+        { label: 'Аа Каждое Слово', fn: 'fmt_title' },
+        { label: 'Аа предложения', fn: 'fmt_sentence' },
+      ],
+      punct: [
+        { label: 'Пробел до знака', fn: 'fmt_space_before' },
+        { label: 'Пробел после знака', fn: 'fmt_space_after' },
+        { label: 'Убрать пунктуацию', fn: 'fmt_remove_punct' },
+        { label: 'Убрать ( ) [ ]', fn: 'fmt_remove_brackets' },
+        { label: 'Заменить пунктуацию', fn: 'fmt_replace_punct' },
+      ],
+      struct: [
+        { label: 'Лишние строки', fn: 'fmt_lines' },
+        { label: 'Одна строка', fn: 'fmt_oneline' },
+        { label: 'По предложениям', fn: 'fmt_sentlines' },
+        { label: 'Убрать нумерацию', fn: 'fmt_denumber' },
+      ],
+    };
+
+    let currentFmtCat = 'spaces';
+
+    let currentFmtTab = 'suno'; // 'suno' | 'presets' | 'commands'
+
+    function setFmtTab(tab, btn) {
+      currentFmtTab = tab;
+      document.querySelectorAll('.fmt-cat').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderFmtBtns();
+    }
+
+    function renderFmtBtns() {
+      const wrap = document.getElementById('fmt-btns');
+      wrap.innerHTML = '';
+
+      if (currentFmtTab === 'suno') {
+        const sunoFns = [
+          { label: 'Only Structure', fn: 'fmt_suno_only_structure' },
+          { label: 'Edit Tags', fn: 'openEtagsSheet' },
+        ];
+        sunoFns.forEach(({ label, fn }) => {
+          const b = document.createElement('button');
+          b.className = 'f-btn';
+          b.textContent = label;
+          b.onclick = () => window[fn]();
+          wrap.appendChild(b);
+        });
+        return;
+      }
+
+      if (currentFmtTab === 'presets') {
+        const presets = loadPresets();
+        if (!presets.length) {
+          const empty = document.createElement('span');
+          empty.style.cssText = 'color:var(--dim);font:400 11px var(--sans);padding:4px 2px;align-self:center;white-space:nowrap;';
+          empty.textContent = 'Нет пресетов — создай в разделе Пресеты';
+          wrap.appendChild(empty);
+          return;
+        }
+        presets.forEach((p, i) => {
+          const b = document.createElement('button');
+          b.className = 'f-btn preset-pill-btn';
+          b.textContent = '⚡ ' + p.name;
+          b.onclick = () => runPreset(i);
+          wrap.appendChild(b);
+        });
+        return;
+      }
+
+      // Commands — все кнопки всех категорий подряд с разделителями
+      const catEntries = Object.entries(FMT_CATS);
+      catEntries.forEach(([, items], ci) => {
+        if (ci > 0) {
+          const sep = document.createElement('div');
+          sep.className = 'fmt-cat-sep';
+          wrap.appendChild(sep);
+        }
+        items.forEach(({ label, fn }) => {
+          const b = document.createElement('button');
+          b.className = 'f-btn';
+          b.textContent = label;
+          b.onclick = () => window[fn]();
+          wrap.appendChild(b);
+        });
+      });
+    }
+
+    // ── SUNO FUNCTIONS ──────────────────────────────────────────────
+    // Убирает style tags из квадратных скобок, оставляет только структурный тег
+    // [Chorus | layered vocals | heavy 808s] → [Chorus]
+    function fmt_suno_only_structure() {
+      const result = activeEd.value.replace(/\[([^\]]+)\]/g, (match, inner) => {
+        const parts = inner.split('|');
+        const structural = parts[0].trim();
+        return structural ? `[${structural}]` : match;
+      });
+      setValue(result);
+      toast('Style tags убраны, структура сохранена');
+    }
+
+    // ── EDIT TAGS ────────────────────────────────────────────────────
+
+    // Структурные теги — первое слово тега должно совпадать с одним из этих
+    const STRUCTURAL_TAGS = new Set([
+      'intro','verse','chorus','outro','bridge','hook',
+      'pre-chorus','post-chorus','breakdown','interlude',
+      'drop','build','refrain','coda','fade','skit','spoken',
+    ]);
+
+    function isStructuralTag(label) {
+      // Считаем тег структурным если первое слово (без цифр) в списке
+      const first = label.trim().toLowerCase().replace(/\s+\d+$/, '').trim();
+      return STRUCTURAL_TAGS.has(first);
+    }
+
+    // Парсит все теги из текста
+    // Возвращает массив { structural, style, raw, count, indices }
+    // indices — массив позиций вхождений в тексте
+    function parseSunoTags(text) {
+      const re = /\[([^\]]+)\]/g;
+      // Сначала собираем все вхождения
+      const all = [];
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        const inner = m[1];
+        const parts = inner.split('|');
+        const structural = parts[0].trim();
+        const style = parts.slice(1).map(s => s.trim()).join(' | ');
+        all.push({ structural, style, raw: m[0], index: m.index });
+      }
+      // Группируем: ключ = raw (весь тег целиком)
+      const map = new Map();
+      all.forEach(item => {
+        if (!map.has(item.raw)) {
+          map.set(item.raw, { structural: item.structural, style: item.style, raw: item.raw, count: 0, indices: [] });
+        }
+        const entry = map.get(item.raw);
+        entry.count++;
+        entry.indices.push(item.index);
+      });
+      // Возвращаем в порядке первого появления
+      const seen = new Set();
+      const result = [];
+      all.forEach(item => {
+        if (!seen.has(item.raw)) {
+          seen.add(item.raw);
+          result.push(map.get(item.raw));
+        }
+      });
+      return result;
+    }
+
+    // Состояние шита: массив { structural, style (редактируемый), raw, count, deleted }
+    let etagsState = [];
+
+    function openEtagsSheet() {
+      const text = activeEd.value;
+      if (!text.trim()) { toast('Редактор пуст'); return; }
+      const tags = parseSunoTags(text);
+      if (!tags.length) { toast('Теги не найдены'); return; }
+      etagsState = tags.map(t => ({ ...t, chips: t.style ? t.style.split("|").map(s => s.trim()).filter(Boolean) : [], deleted: false }));
+      renderEtagsSheet();
+      document.getElementById('etags-overlay').classList.add('active');
+      document.getElementById('etags-sheet').classList.add('open');
+    }
+
+    function closeEtagsSheet() {
+      document.getElementById('etags-overlay').classList.remove('active');
+      document.getElementById('etags-sheet').classList.remove('open');
+    }
+
+    function renderEtagsSheet() {
+      const body = document.getElementById('etags-body');
+      const countEl = document.getElementById('etags-count');
+      const total = etagsState.reduce((s, t) => s + t.count, 0);
+      const unique = etagsState.length;
+      countEl.textContent = `${total} тег${total===1?'':'ов'}, ${unique} уникальных`;
+
+      body.innerHTML = '';
+      etagsState.forEach((tag, i) => {
+        const card = document.createElement('div');
+        card.className = 'etag-card';
+
+        // Верхняя строка: [Structural] ×N [del/restore]
+        const top = document.createElement('div');
+        top.className = 'etag-card-top';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'etag-struct-label';
+        lbl.textContent = `[${tag.structural}]`;
+        top.appendChild(lbl);
+
+        if (tag.count > 1) {
+          const badge = document.createElement('span');
+          badge.className = 'etag-repeat-badge';
+          badge.textContent = `×${tag.count}`;
+          top.appendChild(badge);
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'etag-del-btn';
+        delBtn.title = tag.deleted ? 'Восстановить style tags' : 'Убрать все style tags';
+        delBtn.textContent = tag.deleted ? '↩' : '✕';
+        delBtn.onclick = () => {
+          etagsState[i].deleted = !etagsState[i].deleted;
+          applyEtagsLive();
+          renderEtagsSheet();
+        };
+        top.appendChild(delBtn);
+        card.appendChild(top);
+
+        // Chip-строка со style-тегами
+        const chipsWrap = document.createElement('div');
+        chipsWrap.className = 'etag-chips-wrap' + (tag.deleted ? ' deleted' : '');
+
+        (tag.chips || []).forEach((chipText, ci) => {
+          chipsWrap.appendChild(makeEtagChip(i, ci, chipText));
+        });
+
+        // Кнопка + добавить
+        const addBtn = document.createElement('button');
+        addBtn.className = 'etag-add-btn';
+        addBtn.textContent = '+ добавить';
+        addBtn.onclick = () => etagsAddChip(i, chipsWrap, addBtn);
+        chipsWrap.appendChild(addBtn);
+
+        card.appendChild(chipsWrap);
+        body.appendChild(card);
+      });
+    }
+
+    // Создаёт один DOM-чип
+    function makeEtagChip(tagIdx, chipIdx, text) {
+      const chip = document.createElement('span');
+      chip.className = 'etag-chip';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'etag-chip-text';
+      textSpan.textContent = text;
+      textSpan.title = 'Нажми для редактирования';
+      textSpan.onclick = () => etagsEditChip(tagIdx, chipIdx, chip, textSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'etag-chip-del';
+      delBtn.textContent = '✕';
+      delBtn.title = 'Удалить';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        etagsDeleteChip(tagIdx, chipIdx);
+      };
+
+      chip.appendChild(textSpan);
+      chip.appendChild(delBtn);
+      return chip;
+    }
+
+    // Редактирование чипа: заменяем textSpan на input
+    function etagsEditChip(tagIdx, chipIdx, chip, textSpan) {
+      if (chip.classList.contains('editing')) return;
+      chip.classList.add('editing');
+
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'etag-chip-input';
+      inp.value = textSpan.textContent;
+      inp.spellcheck = false;
+      inp.autocomplete = 'off';
+      inp.style.width = Math.max(60, textSpan.offsetWidth + 8) + 'px';
+
+      chip.replaceChild(inp, textSpan);
+      inp.focus();
+      inp.select();
+
+      const commit = () => {
+        const val = inp.value.trim();
+        if (val) {
+          etagsState[tagIdx].chips[chipIdx] = val;
+        } else {
+          etagsState[tagIdx].chips.splice(chipIdx, 1);
+        }
+        applyEtagsLive();
+        renderEtagsSheet();
+      };
+
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { inp.value = etagsState[tagIdx].chips[chipIdx] || ''; inp.blur(); }
+      });
+    }
+
+    // Удаление чипа
+    function etagsDeleteChip(tagIdx, chipIdx) {
+      etagsState[tagIdx].chips.splice(chipIdx, 1);
+      applyEtagsLive();
+      renderEtagsSheet();
+    }
+
+    // Добавление нового чипа
+    function etagsAddChip(tagIdx, chipsWrap, addBtn) {
+      addBtn.style.display = 'none';
+
+      const newChip = document.createElement('span');
+      newChip.className = 'etag-chip editing';
+
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'etag-chip-input';
+      inp.placeholder = 'новый тег…';
+      inp.spellcheck = false;
+      inp.autocomplete = 'off';
+      inp.style.width = '100px';
+
+      newChip.appendChild(inp);
+      chipsWrap.insertBefore(newChip, addBtn);
+      inp.focus();
+
+      const commit = () => {
+        const val = inp.value.trim();
+        if (val) {
+          etagsState[tagIdx].chips.push(val);
+          applyEtagsLive();
+        }
+        renderEtagsSheet();
+      };
+
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { inp.value = ''; inp.blur(); }
+      });
+    }
+
+    // Применяет текущее состояние etagsState к тексту редактора
+    function applyEtagsLive() {
+      let text = activeEd.value;
+      etagsState.forEach(tag => {
+        const escaped = tag.raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(escaped, 'g');
+        let replacement;
+        if (tag.deleted) {
+          replacement = `[${tag.structural}]`;
+        } else {
+          const chips = (tag.chips || []).filter(Boolean);
+          replacement = chips.length
+            ? `[${tag.structural} | ${chips.join(' | ')}]`
+            : `[${tag.structural}]`;
+        }
+        text = text.replace(re, replacement);
+        // Обновляем raw чтобы следующий вызов нашёл правильную строку
+        tag.raw = replacement;
+      });
+      activeEd.value = text;
+      updateStats();
+    }
+
+    // Рендерит пресеты как pills в строке категорий
+    function fmt_spaces() { setValue(activeEd.value.replace(/[ \t]{2,}/g, ' ')); toast('Двойные пробелы убраны'); }
+    function fmt_lines() { setValue(activeEd.value.replace(/\n{3,}/g, '\n\n')); toast('Лишние строки удалены'); }
+    function fmt_trim() { setValue(activeEd.value.split('\n').map(l => l.trim()).join('\n')); toast('Края строк обрезаны'); }
+    function fmt_upper() { setValue(activeEd.value.toUpperCase()); toast('Текст — ВЕРХНИЙ регистр'); }
+    function fmt_lower() { setValue(activeEd.value.toLowerCase()); toast('Текст — нижний регистр'); }
+
+    // Каждое слово с заглавной
+    function fmt_title() {
+      setValue(activeEd.value.replace(/\S+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase()));
+      toast('Аа — каждое слово с заглавной');
+    }
+
+    // Заглавная после . ! ?
+    function fmt_sentence() {
+      const t = activeEd.value.toLowerCase().replace(/(^|[.!?]\s+)([а-яёa-z])/giu,
+        (_, pre, ch) => pre + ch.toUpperCase());
+      setValue(t);
+      toast('Аа — заглавная в начале предложений');
+    }
+
+    // Убрать пробел ПЕРЕД знаком
+    function fmt_space_before() {
+      setValue(activeEd.value.replace(/\s+([,\.!?:;])/g, '$1'));
+      toast('Пробелы перед знаками убраны');
+    }
+
+    // Добавить пробел ПОСЛЕ знака если его нет
+    function fmt_space_after() {
+      setValue(activeEd.value.replace(/([,\.!?:;])([^\s\n\d"'»)\]\}])/g, '$1 $2'));
+      toast('Пробелы после знаков добавлены');
+    }
+
+    // Убрать все знаки препинания
+    function fmt_remove_punct() {
+      const before = activeEd.value;
+      const after = before.replace(/[.,!?;:'"«»\-—–()\[\]{}\u2018\u2019\u201C\u201D]/g, '');
+      const cnt = before.length - after.length;
+      setValue(after);
+      toast(cnt > 0 ? `Убрано ${cnt} знаков препинания` : 'Знаков препинания не найдено');
+    }
+
+    // Убрать скобки и их содержимое
+    function fmt_remove_brackets() {
+      const before = activeEd.value;
+      // Круглые, квадратные, фигурные — с содержимым
+      let after = before;
+      after = after.replace(/\([^)]*\)/g, '');
+      after = after.replace(/\[[^\]]*\]/g, '');
+      after = after.replace(/\{[^}]*\}/g, '');
+      // Убираем двойные пробелы после удаления
+      after = after.replace(/[ \t]{2,}/g, ' ').replace(/^ +| +$/gm, '');
+      const cnt = before.length - after.length;
+      setValue(after);
+      toast(cnt > 0 ? `Скобки с содержимым убраны` : 'Скобок не найдено');
+    }
+
+    // Заменить знаки препинания на другой символ
+    function fmt_replace_punct() {
+      const repl = prompt('На что заменить знаки препинания? (оставьте пустым чтобы убрать)', '');
+      if (repl === null) return; // отмена
+      const before = activeEd.value;
+      const after = before.replace(/[.,!?;:'"«»\-—–()\[\]{}\u2018\u2019\u201C\u201D]/g, repl);
+      const cnt = (before.match(/[.,!?;:'"«»\-—–()\[\]{}\u2018\u2019\u201C\u201D]/g) || []).length;
+      setValue(after);
+      toast(cnt > 0 ? `Заменено ${cnt} знаков` : 'Знаков препинания не найдено');
+    }
+
+    // Неразрывные пробелы → обычные
+    function fmt_nbsp() {
+      const before = activeEd.value;
+      const after = before.replace(/\u00A0/g, ' ');
+      const cnt = (before.match(/\u00A0/g) || []).length;
+      setValue(after);
+      toast(cnt > 0 ? `Заменено ${cnt} неразрывных пробелов` : 'Неразрывных пробелов не найдено');
+    }
+
+    // Весь текст в одну строку
+    function fmt_oneline() {
+      setValue(activeEd.value.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim());
+      toast('Текст собран в одну строку');
+    }
+
+    // Каждое предложение с новой строки
+    function fmt_sentlines() {
+      setValue(activeEd.value.replace(/([.!?])\s+/g, '$1\n').trim());
+      toast('Каждое предложение на новой строке');
+    }
+
+    // Убрать нумерацию строк (1. 2. 3. и т.д.)
+    function fmt_denumber() {
+      setValue(activeEd.value.replace(/^\s*\d+[\.\)]\s*/gm, ''));
+      toast('Нумерация строк удалена');
+    }
+
+    // ══════════════════════════════════════
+    // CLIPBOARD
+    // ══════════════════════════════════════
+    async function doPaste() {
+      closeFileMenu();
+
+      if (navigator.clipboard && location.protocol === 'https:') {
+        try {
+          const text = await navigator.clipboard.readText();
+          setValue(text);
+          ed.scrollTop = 0;
+          window.scrollTo(0, 0);
+          toast(`✓ Вставлено ${text.length} симв.`);
+          return;
+        } catch { }
+      }
+
+      // Fallback: фокус на поле, пользователь вставляет вручную
+      activeEd.focus();
+      toast('Нажмите и удерживайте поле → Вставить');
+    }
+
+    async function doCopy() {
+      const text = activeEd.value;
+      if (!text.trim()) { toast('Нечего копировать'); return; }
+      addToSessHist(text); // история сессий
+
+      // Метод 1: современный Clipboard API (работает на https://)
+      if (navigator.clipboard && location.protocol === 'https:') {
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(`✓ Скопировано ${text.length} симв.`);
+          return;
+        } catch { }
+      }
+
+      // Метод 2: execCommand (работает везде включая file://)
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) { toast(`✓ Скопировано ${text.length} симв.`); return; }
+      } catch { }
+
+      // Метод 3: выделить текст в поле — пользователь копирует вручную
+      activeEd.focus();
+      ed.select();
+      toast('Выделено — нажмите Копировать на клавиатуре');
+    }
+
+    function doClear() {
+      if (!activeEd.value) return;
+      addToSessHist(activeEd.value); // история сессий
+      setValue('');
+      currentFileName = null;
+      fileHandle = null;
+      document.getElementById('file-banner').classList.remove('active');
+      toast('Поле очищено');
+    }
+
+    // ══════════════════════════════════════
+    // FILE OPERATIONS
+    // ══════════════════════════════════════
+    async function openFile() {
+      closeFileMenu();
+
+      // Try modern File System Access API first
+      if ('showOpenFilePicker' in window) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'Текстовые файлы', accept: { 'text/plain': ['.txt'] } }]
+          });
+          fileHandle = handle;
+          const file = await handle.getFile();
+          const text = await file.text();
+          currentFileName = file.name;
+          setValue(text);
+          showFileBanner(file.name);
+          toast(`✓ Открыт: ${file.name}`);
+          return;
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            // Fall through to input fallback
+          } else return;
+        }
+      }
+
+      // Fallback: classic file input
+      document.getElementById('file-input').click();
+    }
+
+    document.getElementById('file-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      currentFileName = file.name;
+      fileHandle = null;
+      setValue(text);
+      showFileBanner(file.name);
+      toast(`✓ Открыт: ${file.name}`);
+      e.target.value = '';
+    });
+
+    async function saveFile() {
+      closeFileMenu();
+      const text = applyRemovals(activeEd.value);
+      if (!text.trim()) { toast('Нечего сохранять'); return; }
+
+      const fname = currentFileName || 'форматированный.txt';
+
+      // Try File System Access API (save to same file or pick new)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = fileHandle || await window.showSaveFilePicker({
+            suggestedName: fname,
+            types: [{ description: 'Текстовый файл', accept: { 'text/plain': ['.txt'] } }]
+          });
+          fileHandle = handle;
+          const writable = await handle.createWritable();
+          await writable.write(text);
+          await writable.close();
+          currentFileName = handle.name;
+          showFileBanner(handle.name);
+          toast(`✓ Сохранено: ${handle.name}`);
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback: download
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast(`✓ Скачан: ${fname}`);
+    }
+
+    function showFileBanner(name) {
+      document.getElementById('file-name').textContent = name;
+      document.getElementById('file-banner').classList.add('active');
+    }
+
+    function closeFile() {
+      currentFileName = null;
+      fileHandle = null;
+      document.getElementById('file-banner').classList.remove('active');
+    }
+
+    // ══════════════════════════════════════
+    // FILE MENU SHEET
+    // ══════════════════════════════════════
+    function openFileMenu() {
+      document.getElementById('file-menu').classList.add('open');
+      document.getElementById('fm-overlay').classList.add('active');
+    }
+    function closeFileMenu() {
+      document.getElementById('file-menu').classList.remove('open');
+      document.getElementById('fm-overlay').classList.remove('active');
+    }
+
+    // ══════════════════════════════════════
+    // TOAST
+    // ══════════════════════════════════════
+    let toastTimer;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    // ══════════════════════════════════════
+    // PWA INSTALL
+    // ══════════════════════════════════════
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-btn').classList.add('visible');
+    });
+
+    document.getElementById('install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        document.getElementById('install-btn').classList.remove('visible');
+        toast('✓ Приложение установлено!');
+      }
+      deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('install-btn').classList.remove('visible');
+    });
+
+    // ══════════════════════════════════════
+    // NOTES & SESSION HISTORY (localStorage)
+    // ══════════════════════════════════════
+
+    const LS_NOTES = 'edit_notes_v1';
+    const LS_HIST  = 'edit_session_hist_v1';
+    const MAX_SESS = 30; // максимум записей в истории сессий
+
+    function loadNotes() {
+      try { return JSON.parse(localStorage.getItem(LS_NOTES)) || []; } catch { return []; }
+    }
+    function saveNotes(arr) {
+      localStorage.setItem(LS_NOTES, JSON.stringify(arr));
+    }
+    function loadSessHist() {
+      try { return JSON.parse(localStorage.getItem(LS_HIST)) || []; } catch { return []; }
+    }
+    function saveSessHist(arr) {
+      localStorage.setItem(LS_HIST, JSON.stringify(arr));
+    }
+
+    // Форматирование даты
+    function fmtDate(ts) {
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // Авто-имя по дате
+    function autoName() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // Сохранить заметку вручную
+    function saveNote() {
+      const text = activeEd.value.trim();
+      if (!text) { toast('Нет текста для сохранения'); return; }
+      // Читаем имя из sidebar (десктоп) или sheet (мобайл)
+      const nameInput = document.getElementById('nm-name') || document.getElementById('nm-sheet-name');
+      const sheetInput = document.getElementById('nm-sheet-name');
+      const name = nameInput.value.trim() || autoName();
+      const notes = loadNotes();
+      notes.unshift({ id: Date.now(), name, text, ts: Date.now() });
+      saveNotes(notes);
+      if (nameInput) nameInput.value = '';
+      if (sheetInput && sheetInput !== nameInput) sheetInput.value = '';
+      toast(`✓ Заметка «${name}» сохранена`);
+      renderSavedList();
+    }
+
+    // Добавить запись в историю сессий (вызывается при Стереть/Копировать)
+    function addToSessHist(text) {
+      if (!text || text.trim().length < 20) return;
+      const hist = loadSessHist();
+      // Не дублируем если тот же текст что и последний
+      if (hist.length > 0 && hist[0].text === text) return;
+      hist.unshift({ id: Date.now(), text, ts: Date.now() });
+      if (hist.length > MAX_SESS) hist.length = MAX_SESS;
+      saveSessHist(hist);
+    }
+
+    // Восстановить текст из заметки/истории
+    function restoreText(text) {
+      setValue(text);
+      closeNotesMenu();
+      toast('✓ Текст восстановлен');
+    }
+
+    // Удалить заметку
+    function deleteNote(id) {
+      const notes = loadNotes().filter(n => n.id !== id);
+      saveNotes(notes);
+      renderSavedList();
+      toast('Заметка удалена');
+    }
+
+    // Удалить запись из истории
+    function deleteSessEntry(id) {
+      const hist = loadSessHist().filter(n => n.id !== id);
+      saveSessHist(hist);
+      renderHistList();
+      toast('Запись удалена');
+    }
+
+    // Очистить все заметки
+    function clearAllNotes() {
+      if (!confirm('Удалить все сохранённые заметки?')) return;
+      saveNotes([]);
+      renderSavedList();
+      toast('Все заметки удалены');
+    }
+
+    // Очистить историю сессий
+    function clearHistory() {
+      if (!confirm('Очистить всю историю сессий?')) return;
+      saveSessHist([]);
+      renderHistList();
+      toast('История очищена');
+    }
+
+    // Экспорт JSON
+    function exportJSON() {
+      const data = {
+        exported: new Date().toISOString(),
+        notes: loadNotes(),
+        sessionHistory: loadSessHist()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `edit-notes-${autoName().replace(/[: ]/g,'-')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('✓ JSON экспортирован');
+    }
+
+    // Рендер списка заметок (sidebar + sheet)
+    const _noteTexts = new Map(); // id → text для безопасного onclick
+    function renderSavedList() {
+      const containers = ['nm-saved-list', 'nm-sheet-saved-list'].map(id => document.getElementById(id)).filter(Boolean);
+      const notes = loadNotes();
+      containers.forEach(list => {
+        list.innerHTML = '';
+        if (!notes.length) {
+          list.innerHTML = '<div class="nm-empty">Нет сохранённых заметок</div>';
+          return;
+        }
+        notes.forEach(n => {
+          _noteTexts.set('note_' + n.id, n.text);
+          const item = document.createElement('div');
+          item.className = 'nm-item';
+          const body = document.createElement('div');
+          body.className = 'nm-item-body';
+          body.innerHTML = `
+            <div class="nm-item-name">${escHtml(n.name)}</div>
+            <div class="nm-item-meta">${fmtDate(n.ts)} · ${n.text.length} симв.</div>
+            <div class="nm-item-preview">${escHtml(n.text.slice(0,80).replace(/\n/g,' '))}…</div>
+          `;
+          body.addEventListener('click', () => restoreText(n.text));
+          const del = document.createElement('button');
+          del.className = 'nm-del';
+          del.textContent = '×';
+          del.setAttribute('aria-label', 'Удалить');
+          del.addEventListener('click', (e) => { e.stopPropagation(); deleteNote(n.id); });
+          item.appendChild(body);
+          item.appendChild(del);
+          list.appendChild(item);
+        });
+      });
+    }
+
+    // Рендер истории сессий (sidebar + sheet)
+    function renderHistList() {
+      const containers = ['nm-hist-list', 'nm-sheet-hist-list'].map(id => document.getElementById(id)).filter(Boolean);
+      const hist = loadSessHist();
+      containers.forEach(list => {
+        list.innerHTML = '';
+        if (!hist.length) {
+          list.innerHTML = '<div class="nm-empty">История пуста.<br>Появится автоматически при копировании или очистке текста.</div>';
+          return;
+        }
+        hist.forEach(n => {
+          const item = document.createElement('div');
+          item.className = 'nm-item';
+          const body = document.createElement('div');
+          body.className = 'nm-item-body';
+          body.innerHTML = `
+            <div class="nm-item-meta">${fmtDate(n.ts)} · ${n.text.length} симв.</div>
+            <div class="nm-item-preview">${escHtml(n.text.slice(0,100).replace(/\n/g,' '))}…</div>
+          `;
+          body.addEventListener('click', () => restoreText(n.text));
+          const del = document.createElement('button');
+          del.className = 'nm-del';
+          del.textContent = '×';
+          del.setAttribute('aria-label', 'Удалить');
+          del.addEventListener('click', (e) => { e.stopPropagation(); deleteSessEntry(n.id); });
+          item.appendChild(body);
+          item.appendChild(del);
+          list.appendChild(item);
+        });
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Переключение вкладок в notes sheet (mobile)
+    let currentNmTab = 'saved';
+    function switchNmTab(tab) {
+      currentNmTab = tab;
+      document.getElementById('nm-tab-saved').classList.toggle('active', tab === 'saved');
+      document.getElementById('nm-tab-hist').classList.toggle('active', tab === 'hist');
+      const sp = document.getElementById('nm-sheet-saved-panel');
+      const hp = document.getElementById('nm-sheet-hist-panel');
+      sp.style.display = tab === 'saved' ? '' : 'none';
+      hp.style.display = tab === 'hist' ? 'flex' : 'none';
+      if (tab === 'hist') { hp.style.flexDirection = 'column'; hp.style.flex = '1'; hp.style.minHeight = '0'; hp.style.gap = '10px'; }
+      if (tab === 'saved') renderSavedList();
+      else renderHistList();
+    }
+
+    // ── NOTES DRAWER ─────────────────────────────────────────────────────
+    function openNotesDrawer() {
+      document.getElementById('notes-drawer').classList.add('open');
+      document.getElementById('notes-drawer-overlay').classList.add('open');
+      document.getElementById('notes-hdr-btn').classList.add('active');
+      const ni = document.getElementById('nm-name');
+      if (ni && !ni.value) ni.value = autoName();
+      renderSavedList();
+    }
+    function closeNotesDrawer() {
+      document.getElementById('notes-drawer').classList.remove('open');
+      document.getElementById('notes-drawer-overlay').classList.remove('open');
+      document.getElementById('notes-hdr-btn').classList.remove('active');
+    }
+
+    function openNotesMenu() {
+      document.getElementById('notes-menu').classList.add('open');
+      document.getElementById('nm-overlay').classList.add('active');
+      const ni = document.getElementById('nm-sheet-name');
+      if (ni && !ni.value) ni.value = autoName();
+      if (currentNmTab === 'saved') renderSavedList();
+      else renderHistList();
+    }
+    function closeNotesMenu() {
+      document.getElementById('notes-menu').classList.remove('open');
+      document.getElementById('nm-overlay').classList.remove('active');
+    }
+
+    // Переключение вкладок в sidebar (desktop)
+    let currentSbTab = 'saved';
+    function switchSbTab(tab) {
+      currentSbTab = tab;
+      document.getElementById('sb-tab-saved').classList.toggle('active', tab === 'saved');
+      document.getElementById('sb-tab-hist').classList.toggle('active', tab === 'hist');
+      const sp = document.getElementById('nm-saved-panel');
+      const hp = document.getElementById('nm-hist-panel');
+      if (tab === 'saved') {
+        sp.style.display = 'flex'; sp.classList.remove('nm-hidden');
+        hp.style.display = 'none'; hp.classList.add('nm-hidden');
+        renderSavedList();
+      } else {
+        hp.style.display = 'flex'; hp.classList.remove('nm-hidden');
+        sp.style.display = 'none'; sp.classList.add('nm-hidden');
+        renderHistList();
+      }
+    }
+
+    // ══════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════
+    let edTimer;
+    let wasEmpty = true;
+
+    function attachEditorListeners(textarea) {
+      let wasEmptyLocal = true;
+      textarea.addEventListener('input', () => {
+        if (wasEmptyLocal && textarea.value.length > 0) {
+          textarea.scrollTop = 0;
+        }
+        wasEmptyLocal = textarea.value.length === 0;
+        // Убеждаемся что активный редактор = этот
+        if (activeEd !== textarea) {
+          activeEd = textarea;
+          if (activeEd === ed) { hist = hist1; hIdx = hIdx1; }
+          else                  { hist = hist2; hIdx = hIdx2; }
+        }
+        clearTimeout(edTimer);
+        edTimer = setTimeout(() => {
+          saveHist(textarea.value);
+          removedSet.clear();
+          render();
+        }, 350);
+      });
+    }
+    attachEditorListeners(ed);
+    attachEditorListeners(ed2);
+
+    // Init
+    activeEd.value = '';
+    ed2.value = '';
+    renderFmtBtns();
+    render();
+    // Отмечаем первый редактор активным по умолчанию
+    document.getElementById('pane1').classList.add('active-pane');
+    renderSavedList(); // sidebar desktop
+    // Авто-имя в sidebar
+    const _sbn = document.getElementById('nm-name');
+    if (_sbn) _sbn.value = autoName();
+
+    // ══════════════════════════════════════
+    // PRESETS & REGEX SYSTEM
+    // ══════════════════════════════════════
+
+    const LS_PRESETS = 'edit_presets_v1';
+    const LS_REGEX   = 'edit_regex_v1';
+
+    // --- Storage helpers ---
+    function loadPresets() { try { return JSON.parse(localStorage.getItem(LS_PRESETS)) || []; } catch { return []; } }
+    function savePresets(arr) { localStorage.setItem(LS_PRESETS, JSON.stringify(arr)); }
+    function loadRegexList() { try { return JSON.parse(localStorage.getItem(LS_REGEX)) || []; } catch { return []; } }
+    function saveRegexList(arr) { localStorage.setItem(LS_REGEX, JSON.stringify(arr)); }
+
+    // --- Pure text transformers for presets (text → text, no side effects) ---
+    const FMT_ACTION_MAP = {
+      fmt_suno_only_structure: { label: 'Only Structure', fn: v => v.replace(/\[([^\]]+)\]/g, (m, inner) => { const s = inner.split('|')[0].trim(); return s ? `[${s}]` : m; }) },
+      fmt_spaces:        { label: '×2 пробелы',       fn: v => v.replace(/[ \t]{2,}/g, ' ') },
+      fmt_nbsp:          { label: 'Неразрывные',       fn: v => v.replace(/\u00A0/g, ' ') },
+      fmt_trim:          { label: 'Обрезать края',     fn: v => v.split('\n').map(l => l.trim()).join('\n') },
+      fmt_upper:         { label: 'АА ВЕРХНИЙ',        fn: v => v.toUpperCase() },
+      fmt_lower:         { label: 'аа нижний',         fn: v => v.toLowerCase() },
+      fmt_title:         { label: 'Аа Каждое Слово',   fn: v => v.replace(/\S+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase()) },
+      fmt_sentence:      { label: 'Аа предложения',    fn: v => v.toLowerCase().replace(/(^|[.!?]\s+)([а-яёa-z])/giu, (_, p, c) => p + c.toUpperCase()) },
+      fmt_space_before:  { label: 'Пробел до знака',   fn: v => v.replace(/\s+([,\.!?:;])/g, '$1') },
+      fmt_space_after:   { label: 'Пробел после знака',fn: v => v.replace(/([,\.!?:;])([^\s\n\d"'»)\]\}])/g, '$1 $2') },
+      fmt_remove_punct:  { label: 'Убрать пунктуацию', fn: v => v.replace(/[.,!?;:'"«»\-—–()\[\]{}\u2018\u2019\u201C\u201D]/g, '') },
+      fmt_remove_brackets:{ label: 'Убрать ( ) [ ]',   fn: v => v.replace(/\([^)]*\)/g,'').replace(/\[[^\]]*\]/g,'').replace(/\{[^}]*\}/g,'').replace(/[ \t]{2,}/g,' ').replace(/^ +| +$/gm,'') },
+      fmt_lines:         { label: 'Лишние строки',     fn: v => v.replace(/\n{3,}/g, '\n\n') },
+      fmt_oneline:       { label: 'Одна строка',       fn: v => v.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim() },
+      fmt_sentlines:     { label: 'По предложениям',   fn: v => v.replace(/([.!?])\s+/g, '$1\n').trim() },
+      fmt_denumber:      { label: 'Убрать нумерацию',  fn: v => v.replace(/^\s*\d+[\.]\s*/gm, '') },
+    };
+
+    // --- Sheet open/close ---
+    let psCurrentTab = 'presets';
+
+    function openPresetsSheet() {
+      document.getElementById('ps-overlay').classList.add('active');
+      const sheet = document.getElementById('presets-sheet');
+      sheet.classList.add('open');
+      renderPresetsTab();
+      renderRegexTab();
+    }
+    function closePresetsSheet() {
+      document.getElementById('ps-overlay').classList.remove('active');
+      document.getElementById('presets-sheet').classList.remove('open');
+    }
+    function switchPsTab(tab) {
+      psCurrentTab = tab;
+      document.getElementById('ps-tab-presets').classList.toggle('active', tab === 'presets');
+      document.getElementById('ps-tab-regex').classList.toggle('active', tab === 'regex');
+      document.getElementById('ps-body-presets').style.display = tab === 'presets' ? 'flex' : 'none';
+      document.getElementById('ps-body-regex').style.display  = tab === 'regex'   ? 'flex' : 'none';
+      // swap footer Add button behaviour
+      document.getElementById('ps-add-btn').onclick = tab === 'presets'
+        ? () => openPresetModal(null)
+        : () => openRegexModal(null);
+    }
+
+    // ── RENDER PRESETS TAB ──
+    function renderPresetsTab() {
+      const list = loadPresets();
+      const el = document.getElementById('ps-body-presets');
+      if (!list.length) {
+        el.innerHTML = '<div class="ps-empty">Нет пресетов.<br>Нажми «+ Добавить» чтобы создать.</div>';
+        return;
+      }
+      el.innerHTML = '';
+      list.forEach((p, i) => {
+        const card = document.createElement('div');
+        card.className = 'ps-card';
+
+        const stepLabels = (p.steps || []).map(id => {
+          if (id.startsWith('__sym__')) {
+            const syms = id.replace('__sym__','').split('\x00').filter(Boolean);
+            return '🔣 ' + syms.map(s => s === '__emoji__' ? '😀' : s).join(' ');
+          }
+          if (id.startsWith('__rx__')) {
+            const rxList = loadRegexList();
+            const rx = rxList.find(r => r.id === id.replace('__rx__',''));
+            return rx ? rx.name : id;
+          }
+          return FMT_ACTION_MAP[id] ? FMT_ACTION_MAP[id].label : id;
+        });
+
+        card.innerHTML = `
+          <div class="ps-card-row">
+            <span class="ps-card-name">${escHtml(p.name)}</span>
+            <div class="ps-card-btns">
+              <button class="ps-run-btn" onclick="runPreset(${i})">▶ Запустить</button>
+              <button class="ps-icon-btn" onclick="openPresetModal(${i})" title="Редактировать">✎</button>
+              <button class="ps-icon-btn danger" onclick="deletePreset(${i})" title="Удалить">✕</button>
+            </div>
+          </div>
+          <div class="ps-steps-preview">${stepLabels.map(l => `<span class="ps-step-chip">${escHtml(l)}</span>`).join('')}</div>
+        `;
+        el.appendChild(card);
+      });
+    }
+
+    // ── RENDER REGEX TAB ──
+    function renderRegexTab() {
+      const list = loadRegexList();
+      const el = document.getElementById('ps-body-regex');
+      if (!list.length) {
+        el.innerHTML = '<div class="ps-empty">Нет кастомных регулярок.<br>Нажми «+ Добавить» чтобы создать.</div>';
+        return;
+      }
+      el.innerHTML = '';
+      list.forEach((r, i) => {
+        const card = document.createElement('div');
+        card.className = 'ps-card';
+        card.innerHTML = `
+          <div class="ps-card-row">
+            <span class="ps-card-name">${escHtml(r.name)}</span>
+            <div class="ps-card-btns">
+              <button class="ps-run-btn" onclick="runRegex(${i})">▶ Применить</button>
+              <button class="ps-icon-btn" onclick="openRegexModal(${i})" title="Редактировать">✎</button>
+              <button class="ps-icon-btn danger" onclick="deleteRegex(${i})" title="Удалить">✕</button>
+            </div>
+          </div>
+          <div class="ps-regex-preview">/${escHtml(r.pattern)}/${escHtml(r.flags)} → «${escHtml(r.replace || '')}»</div>
+        `;
+        el.appendChild(card);
+      });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── RUN PRESET ──
+    function runPreset(idx) {
+      const list = loadPresets();
+      const p = list[idx];
+      if (!p) return;
+      let v = activeEd.value;
+      let applied = 0;
+      (p.steps || []).forEach(id => {
+        if (id.startsWith('__rx__')) {
+          const rxId = id.replace('__rx__','');
+          const rx = loadRegexList().find(r => r.id === rxId);
+          if (rx) {
+            try {
+              const re = new RegExp(rx.pattern, rx.flags);
+              v = v.replace(re, rx.replace || '');
+              applied++;
+            } catch(e) { toast('Ошибка регулярки: ' + rx.name); }
+          }
+        } else if (id.startsWith('__sym__')) {
+          // Символы из детектора
+          const syms = id.replace('__sym__','').split('\x00').filter(Boolean);
+          const tmpSet = new Set(syms);
+          const hadEmoji = syms.includes('__emoji__');
+          if (hadEmoji) tmpSet.delete('__emoji__');
+          // применяем через applyRemovals-логику напрямую
+          const sorted = [...tmpSet].sort((a,b) => b.length - a.length);
+          sorted.forEach(pat => { v = removeExact(v, pat); });
+          if (hadEmoji) v = v.replace(EMOJI_RE, '');
+          applied++;
+        } else {
+          const action = FMT_ACTION_MAP[id];
+          if (action) { v = action.fn(v); applied++; }
+        }
+      });
+      setValue(v);
+      // Закрываем sheet только если он открыт
+      if (document.getElementById('presets-sheet').classList.contains('open')) closePresetsSheet();
+      toast(`✓ «${p.name}» — ${applied} шаг${applied===1?'':applied<5?'а':'ов'}`);
+    }
+
+    // ── RUN SINGLE REGEX ──
+    function runRegex(idx) {
+      const list = loadRegexList();
+      const r = list[idx];
+      if (!r) return;
+      try {
+        const re = new RegExp(r.pattern, r.flags);
+        setValue(activeEd.value.replace(re, r.replace || ''));
+        closePresetsSheet();
+        toast(`✓ «${r.name}» применена`);
+      } catch(e) { toast('Ошибка в регулярке: ' + e.message); }
+    }
+
+    // ── DELETE ──
+    function deletePreset(idx) {
+      const list = loadPresets();
+      const name = list[idx].name;
+      list.splice(idx, 1);
+      savePresets(list);
+      renderPresetsTab();
+      renderFmtBtns();
+      toast(`Удалён: «${name}»`);
+    }
+    function deleteRegex(idx) {
+      const list = loadRegexList();
+      const name = list[idx].name;
+      list.splice(idx, 1);
+      saveRegexList(list);
+      renderRegexTab();
+      toast(`Удалена: «${name}»`);
+    }
+
+    // ══════════════════════════════════════
+    // PRESET MODAL EDITOR
+    // ══════════════════════════════════════
+
+    let pmEditIdx = null;  // null = new, number = edit
+    let pmSelectedSteps = []; // ordered array of step IDs
+
+    function openPresetModal(idx) {
+      pmEditIdx = idx;
+      const isEdit = idx !== null;
+      document.getElementById('preset-modal-title').textContent = isEdit ? 'Редактировать пресет' : 'Новый пресет';
+
+      const presets = loadPresets();
+      if (isEdit && presets[idx]) {
+        document.getElementById('pm-name').value = presets[idx].name;
+        pmSelectedSteps = [...(presets[idx].steps || [])];
+      } else {
+        document.getElementById('pm-name').value = '';
+        pmSelectedSteps = [];
+      }
+
+      buildStepPicker();
+      renderStepsOrder();
+
+      document.getElementById('preset-modal-overlay').classList.add('open');
+      document.getElementById('preset-modal-box').classList.add('open');
+    }
+
+    function closePresetModal() {
+      document.getElementById('preset-modal-overlay').classList.remove('open');
+      document.getElementById('preset-modal-box').classList.remove('open');
+    }
+
+    function buildStepPicker() {
+      const picker = document.getElementById('pm-step-picker');
+      picker.innerHTML = '';
+
+      // ── Секция: символы из детектора ──
+      const symHeader = document.createElement('div');
+      symHeader.style.cssText = 'width:100%;font:600 10px var(--sans);color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin:2px 0 4px;';
+      symHeader.textContent = 'Символы';
+      picker.appendChild(symHeader);
+
+      // Найти какие символы есть в тексте сейчас
+      const currentText = activeEd.value;
+      const foundSyms = DICT.filter(pat => currentText.includes(pat));
+      const hasEmoji = EMOJI_RE.test(currentText);
+      EMOJI_RE.lastIndex = 0;
+
+      // Существующий __sym__ шаг в pmSelectedSteps (если есть)
+      const symStepIdx = pmSelectedSteps.findIndex(s => s.startsWith('__sym__'));
+      const selectedSyms = symStepIdx !== -1
+        ? new Set(pmSelectedSteps[symStepIdx].replace('__sym__','').split('\x00').filter(Boolean))
+        : new Set();
+
+      // Показываем все символы DICT + эмодзи
+      const allSyms = [...DICT, ...(hasEmoji || selectedSyms.has('__emoji__') ? ['__emoji__'] : [])];
+      const displaySyms = allSyms.length ? allSyms : DICT; // если текст пустой — показываем все
+
+      displaySyms.forEach(pat => {
+        const isEmoji = pat === '__emoji__';
+        const label = isEmoji ? '😀 эмодзи' : pat;
+        const inText = isEmoji ? hasEmoji : currentText.includes(pat);
+        const chip = document.createElement('button');
+        chip.className = 'step-chip' + (selectedSyms.has(pat) ? ' selected' : '');
+        chip.textContent = label;
+        if (!inText) chip.style.opacity = '0.45'; // не в тексте — затемнить, но не скрыть
+        chip.title = inText ? 'Найден в тексте' : 'Не найден в тексте';
+        chip.onclick = () => toggleSymStep(pat, chip, selectedSyms, symStepIdx);
+        picker.appendChild(chip);
+      });
+
+      // ── Секция: fmt-функции ──
+      const fmtHeader = document.createElement('div');
+      fmtHeader.style.cssText = 'width:100%;font:600 10px var(--sans);color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px;';
+      fmtHeader.textContent = 'Форматирование';
+      picker.appendChild(fmtHeader);
+
+      Object.entries(FMT_ACTION_MAP).forEach(([id, item]) => {
+        const chip = document.createElement('button');
+        chip.className = 'step-chip' + (pmSelectedSteps.includes(id) ? ' selected' : '');
+        chip.textContent = item.label;
+        chip.onclick = () => toggleStep(id, chip);
+        picker.appendChild(chip);
+      });
+
+      // ── Секция: кастомные регулярки ──
+      const rxList = loadRegexList();
+      if (rxList.length) {
+        const rxHeader = document.createElement('div');
+        rxHeader.style.cssText = 'width:100%;font:600 10px var(--sans);color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px;';
+        rxHeader.textContent = 'Регулярки';
+        picker.appendChild(rxHeader);
+        rxList.forEach(rx => {
+          const id = '__rx__' + rx.id;
+          const chip = document.createElement('button');
+          chip.className = 'step-chip' + (pmSelectedSteps.includes(id) ? ' selected' : '');
+          chip.textContent = '/ ' + rx.name;
+          chip.onclick = () => toggleStep(id, chip);
+          picker.appendChild(chip);
+        });
+      }
+    }
+
+    // Тогл символа — они объединяются в один шаг __sym__
+    function toggleSymStep(pat, chip, selectedSyms, symStepIdx) {
+      if (selectedSyms.has(pat)) {
+        selectedSyms.delete(pat);
+        chip.classList.remove('selected');
+      } else {
+        selectedSyms.add(pat);
+        chip.classList.add('selected');
+      }
+      // Пересобираем единый __sym__ шаг
+      const newId = '__sym__' + [...selectedSyms].join('\x00');
+      if (symStepIdx !== -1) {
+        if (selectedSyms.size === 0) {
+          pmSelectedSteps.splice(symStepIdx, 1);
+        } else {
+          pmSelectedSteps[symStepIdx] = newId;
+        }
+      } else if (selectedSyms.size > 0) {
+        pmSelectedSteps.unshift(newId); // символы — первый шаг
+      }
+      renderStepsOrder();
+    }
+
+    function toggleStep(id, chip) {
+      const idx = pmSelectedSteps.indexOf(id);
+      if (idx === -1) {
+        pmSelectedSteps.push(id);
+        chip.classList.add('selected');
+      } else {
+        pmSelectedSteps.splice(idx, 1);
+        chip.classList.remove('selected');
+      }
+      renderStepsOrder();
+    }
+
+    function renderStepsOrder() {
+      const el = document.getElementById('pm-steps-order');
+      if (!pmSelectedSteps.length) {
+        el.innerHTML = '<span style="color:var(--dim);font:400 11px var(--sans);padding:4px 0;">Выбери шаги выше</span>';
+        return;
+      }
+      el.innerHTML = '';
+      pmSelectedSteps.forEach((id, i) => {
+        let label;
+        if (id.startsWith('__sym__')) {
+          const syms = id.replace('__sym__','').split('\x00').filter(Boolean);
+          label = '🔣 Символы: ' + syms.map(s => s === '__emoji__' ? '😀' : s).join(' ');
+        } else if (id.startsWith('__rx__')) {
+          const rx = loadRegexList().find(r => r.id === id.replace('__rx__',''));
+          label = rx ? ('/ ' + rx.name) : id;
+        } else {
+          label = FMT_ACTION_MAP[id] ? FMT_ACTION_MAP[id].label : id;
+        }
+        const row = document.createElement('div');
+        row.className = 'sorder-item';
+        row.innerHTML = `
+          <span class="sorder-drag">⠿</span>
+          <span class="sorder-label">${escHtml(label)}</span>
+          ${i > 0 ? `<button class="sorder-up" onclick="moveStep(${i},-1)">↑</button>` : '<span style="width:20px"></span>'}
+          ${i < pmSelectedSteps.length-1 ? `<button class="sorder-dn" onclick="moveStep(${i},1)">↓</button>` : '<span style="width:20px"></span>'}
+          <button class="sorder-del" onclick="removeStep(${i})">✕</button>
+        `;
+        el.appendChild(row);
+      });
+    }
+
+    function moveStep(i, dir) {
+      const j = i + dir;
+      if (j < 0 || j >= pmSelectedSteps.length) return;
+      [pmSelectedSteps[i], pmSelectedSteps[j]] = [pmSelectedSteps[j], pmSelectedSteps[i]];
+      renderStepsOrder();
+    }
+
+    function removeStep(i) {
+      pmSelectedSteps.splice(i, 1);
+      buildStepPicker(); // пересинхронизирует selected-состояние всех чипов
+      renderStepsOrder();
+    }
+
+    function savePresetFromModal() {
+      const name = document.getElementById('pm-name').value.trim();
+      if (!name) { toast('Введи название'); return; }
+      if (!pmSelectedSteps.length) { toast('Выбери хотя бы один шаг'); return; }
+
+      const list = loadPresets();
+      const entry = { name, steps: [...pmSelectedSteps] };
+      if (pmEditIdx !== null) {
+        list[pmEditIdx] = entry;
+      } else {
+        list.push(entry);
+      }
+      savePresets(list);
+      closePresetModal();
+      renderPresetsTab();
+      renderFmtBtns();
+      toast(pmEditIdx !== null ? `Пресет обновлён` : `Пресет «${name}» сохранён`);
+    }
+
+    // ══════════════════════════════════════
+    // REGEX MODAL EDITOR
+    // ══════════════════════════════════════
+
+    let rmEditIdx = null;
+
+    function openRegexModal(idx) {
+      rmEditIdx = idx;
+      const isEdit = idx !== null;
+      document.getElementById('regex-modal-title').textContent = isEdit ? 'Редактировать регулярку' : 'Новая регулярка';
+
+      const list = loadRegexList();
+      if (isEdit && list[idx]) {
+        document.getElementById('rm-name').value    = list[idx].name;
+        document.getElementById('rm-pattern').value = list[idx].pattern;
+        document.getElementById('rm-flags').value   = list[idx].flags;
+        document.getElementById('rm-replace').value = list[idx].replace || '';
+      } else {
+        document.getElementById('rm-name').value    = '';
+        document.getElementById('rm-pattern').value = '';
+        document.getElementById('rm-flags').value   = 'g';
+        document.getElementById('rm-replace').value = '';
+      }
+      document.getElementById('rm-test-result').textContent = '';
+
+      document.getElementById('regex-modal-overlay').classList.add('open');
+      document.getElementById('regex-modal-box').classList.add('open');
+    }
+
+    function closeRegexModal() {
+      document.getElementById('regex-modal-overlay').classList.remove('open');
+      document.getElementById('regex-modal-box').classList.remove('open');
+    }
+
+    function testRegex() {
+      const pat = document.getElementById('rm-pattern').value;
+      const flags = document.getElementById('rm-flags').value;
+      const repl = document.getElementById('rm-replace').value;
+      const sample = activeEd.value || 'Тест: (удалить это) и [это тоже] остальное оставить';
+      const res = document.getElementById('rm-test-result');
+      if (!pat) { res.textContent = '⚠ Введи паттерн'; return; }
+      try {
+        const re = new RegExp(pat, flags);
+        const out = sample.slice(0, 200).replace(re, repl || '');
+        res.textContent = '→ ' + out.slice(0, 120) + (out.length > 120 ? '…' : '');
+        res.style.color = 'var(--green, #4ade80)';
+      } catch(e) {
+        res.textContent = '✕ Ошибка: ' + e.message;
+        res.style.color = '#f87171';
+      }
+    }
+
+    function saveRegexFromModal() {
+      const name    = document.getElementById('rm-name').value.trim();
+      const pattern = document.getElementById('rm-pattern').value.trim();
+      const flags   = document.getElementById('rm-flags').value.trim();
+      const replace = document.getElementById('rm-replace').value;
+
+      if (!name)    { toast('Введи название'); return; }
+      if (!pattern) { toast('Введи паттерн'); return; }
+      try { new RegExp(pattern, flags); } catch(e) { toast('Ошибка в RegExp: ' + e.message); return; }
+
+      const list = loadRegexList();
+      const entry = { id: rmEditIdx !== null ? list[rmEditIdx].id : Date.now().toString(36), name, pattern, flags, replace };
+      if (rmEditIdx !== null) {
+        list[rmEditIdx] = entry;
+      } else {
+        list.push(entry);
+      }
+      saveRegexList(list);
+      closeRegexModal();
+      renderRegexTab();
+      // refresh preset picker if modal is open
+      if (document.getElementById('preset-modal-box').classList.contains('open')) buildStepPicker();
+      toast(rmEditIdx !== null ? `Регулярка обновлена` : `«${name}» сохранена`);
+    }
+
+    // ══════════════════════════════════════
+    // EXPORT / IMPORT
+    // ══════════════════════════════════════
+
+    function exportPresetsJSON() {
+      const data = {
+        presets: loadPresets(),
+        regex: loadRegexList()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'edit-presets.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Экспортировано');
+    }
+
+    function importPresetsJSON(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.presets) savePresets(data.presets);
+          if (data.regex)   saveRegexList(data.regex);
+          renderPresetsTab();
+          renderRegexTab();
+          renderFmtBtns();
+          toast(`Импортировано: ${(data.presets||[]).length} пресетов, ${(data.regex||[]).length} регулярок`);
+        } catch(err) {
+          toast('Ошибка импорта: ' + err.message);
+        }
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    // ══════════════════════════════════════
+    // TEMPLATES
+    // ══════════════════════════════════════
+
+    function loadTemplates() {
+      try { return JSON.parse(localStorage.getItem('edit_templates_v1') || '[]'); } catch { return []; }
+    }
+    function saveTemplates(list) {
+      localStorage.setItem('edit_templates_v1', JSON.stringify(list));
+    }
+
+    // --- Sheet open/close ---
+    function openTplSheet() {
+      document.getElementById('tpl-overlay').classList.add('active');
+      document.getElementById('tpl-sheet').classList.add('open');
+      renderTplSheet();
+    }
+    function closeTplSheet() {
+      document.getElementById('tpl-overlay').classList.remove('active');
+      document.getElementById('tpl-sheet').classList.remove('open');
+    }
+
+    // --- Render sheet ---
+    function renderTplSheet() {
+      const list = loadTemplates();
+      const body = document.getElementById('tpl-body');
+      if (!list.length) {
+        body.innerHTML = '<p class="tpl-empty">Шаблонов пока нет.<br>Нажми «+ Добавить» чтобы создать первый.</p>';
+        return;
+      }
+      body.innerHTML = list.map((t, i) => {
+        const phs = extractPlaceholders(t.text);
+        const phChips = phs.map(p => `<span class="tpl-ph-chip">{{${p}}}</span>`).join('');
+        const preview = t.text.replace(/\n/g, ' ').slice(0, 60) + (t.text.length > 60 ? '…' : '');
+        return `<div class="tpl-item">
+          <div class="tpl-item-top">
+            <span class="tpl-item-name">📄 ${esc(t.name)}</span>
+            <button class="tpl-use-btn" onclick="useTpl(${i})">▶ Вставить</button>
+            <button class="tpl-icon-btn" onclick="openTplModal(${i})" title="Редактировать">✏</button>
+            <button class="tpl-icon-btn danger" onclick="deleteTpl(${i})" title="Удалить">✕</button>
+          </div>
+          <div class="tpl-preview">${esc(preview)}</div>
+          ${phs.length ? `<div class="tpl-chips">${phChips}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function esc(s) { return escHtml(s); }
+
+    // --- Extract placeholders ---
+    function extractPlaceholders(text) {
+      const found = [];
+      const re = /\{\{([^}]+)\}\}/g;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        const name = m[1].trim();
+        if (name && !found.includes(name)) found.push(name);
+      }
+      return found;
+    }
+
+    // --- Use template ---
+    function useTpl(idx) {
+      const list = loadTemplates();
+      const tpl = list[idx];
+      if (!tpl) return;
+      const phs = extractPlaceholders(tpl.text);
+      if (phs.length === 0) {
+        // No placeholders — insert directly
+        setEditorText(tpl.text);
+        closeTplSheet();
+        toast(`Шаблон «${tpl.name}» вставлен`);
+      } else {
+        // Open fill modal
+        closeTplSheet();
+        openFillModal(tpl, phs);
+      }
+    }
+
+    // --- Delete template ---
+    function deleteTpl(idx) {
+      const list = loadTemplates();
+      list.splice(idx, 1);
+      saveTemplates(list);
+      renderTplSheet();
+      toast('Шаблон удалён');
+    }
+
+    // --- Template editor modal ---
+    let tplEditIdx = null;
+
+    function openTplModal(idx) {
+      tplEditIdx = idx;
+      const list = loadTemplates();
+      const tpl = idx !== null ? list[idx] : null;
+      document.getElementById('tpl-modal-title').textContent = tpl ? 'Редактировать шаблон' : 'Новый шаблон';
+      document.getElementById('tpl-name-input').value = tpl ? tpl.name : '';
+      document.getElementById('tpl-text-input').value = tpl ? tpl.text : '';
+      updateDetectedPhs();
+      document.getElementById('tpl-modal-overlay').classList.add('open');
+      document.getElementById('tpl-modal-box').classList.add('open');
+      setTimeout(() => document.getElementById('tpl-name-input').focus(), 350);
+    }
+    function closeTplModal() {
+      document.getElementById('tpl-modal-overlay').classList.remove('open');
+      document.getElementById('tpl-modal-box').classList.remove('open');
+    }
+    function saveTplFromModal() {
+      const name = document.getElementById('tpl-name-input').value.trim();
+      const text = document.getElementById('tpl-text-input').value;
+      if (!name) { toast('Укажи название шаблона'); return; }
+      if (!text.trim()) { toast('Текст шаблона не может быть пустым'); return; }
+      const list = loadTemplates();
+      const entry = { name, text, ts: Date.now() };
+      if (tplEditIdx !== null) {
+        list[tplEditIdx] = entry;
+      } else {
+        list.push(entry);
+      }
+      saveTemplates(list);
+      closeTplModal();
+      renderTplSheet();
+      toast(tplEditIdx !== null ? 'Шаблон обновлён' : 'Шаблон сохранён');
+    }
+
+    // Live placeholder detection in textarea
+    document.getElementById('tpl-text-input').addEventListener('input', updateDetectedPhs);
+    function updateDetectedPhs() {
+      const text = document.getElementById('tpl-text-input').value;
+      const phs = extractPlaceholders(text);
+      const cont = document.getElementById('tpl-detected-phs');
+      if (!phs.length) {
+        cont.innerHTML = '<span style="font:400 11px var(--sans);color:var(--muted);">Пока нет</span>';
+      } else {
+        cont.innerHTML = phs.map(p => `<span class="tpl-ph-chip">{{${esc(p)}}}</span>`).join('');
+      }
+    }
+
+    // --- Fill placeholders modal ---
+    let fillTpl = null;
+
+    function openFillModal(tpl, phs) {
+      fillTpl = tpl;
+      document.getElementById('fill-modal-title').textContent = `📄 ${tpl.name}`;
+      document.getElementById('fill-modal-sub').textContent = `Заполни ${phs.length} плейсхолдер${phs.length === 1 ? '' : phs.length < 5 ? 'а' : 'ов'}`;
+      const body = document.getElementById('fill-modal-body');
+      body.innerHTML = phs.map(p => `
+        <div>
+          <div class="fill-field-label">{{${esc(p)}}}</div>
+          <input class="fill-field-input" data-ph="${esc(p)}" type="text" placeholder="${esc(p)}" autocomplete="off" spellcheck="false">
+        </div>
+      `).join('');
+      document.getElementById('fill-modal-overlay').classList.add('open');
+      document.getElementById('fill-modal-box').classList.add('open');
+      setTimeout(() => body.querySelector('input')?.focus(), 350);
+    }
+    function closeFillModal() {
+      document.getElementById('fill-modal-overlay').classList.remove('open');
+      document.getElementById('fill-modal-box').classList.remove('open');
+      fillTpl = null;
+    }
+    function applyFillModal() {
+      if (!fillTpl) return;
+      const inputs = document.querySelectorAll('#fill-modal-body .fill-field-input');
+      let result = fillTpl.text;
+      inputs.forEach(inp => {
+        const ph = inp.getAttribute('data-ph');
+        const val = inp.value; // empty = keep placeholder or replace with empty
+        result = result.split(`{{${ph}}}`).join(val);
+      });
+      setEditorText(result);
+      closeFillModal();
+      toast(`Шаблон «${fillTpl.name}» вставлен`);
+    }
+
+    // --- Helper: set editor text ---
+    function setEditorText(text) {
+      setValue(text);
+    }
+
+    // --- Export/Import ---
+    function exportTplJSON() {
+      const list = loadTemplates();
+      if (!list.length) { toast('Нет шаблонов для экспорта'); return; }
+      const blob = new Blob([JSON.stringify({ templates: list }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'edit-templates.json';
+      a.click();
+    }
+    function importTplJSON(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.templates && Array.isArray(data.templates)) {
+            saveTemplates(data.templates);
+            renderTplSheet();
+            toast(`Импортировано: ${data.templates.length} шаблонов`);
+          } else {
+            toast('Неверный формат файла');
+          }
+        } catch(err) {
+          toast('Ошибка импорта: ' + err.message);
+        }
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+
+</html>
